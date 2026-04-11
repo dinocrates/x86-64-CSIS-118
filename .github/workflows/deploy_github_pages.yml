@@ -8,6 +8,7 @@
 # https://github.com/actions/upload-pages-artifact
 name: Update GitHub Pages
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
