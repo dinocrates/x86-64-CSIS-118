@@ -242,7 +242,33 @@ export interface Snippet {
 	editorContent: string;
 }
 
+const csis118b_welcome = `; ============================================
+; CSIS-118B | Mt. San Jacinto College
+; Welcome to the CSIS-118B Assembly IDE
+; ============================================
+
+%include "csis118b.inc"
+
+section .data
+    msg db "Hello, World!", 0
+
+section .text
+    global main
+
+main:
+    mov rdi, msg
+    call print_line
+    exit
+`;
+
 export const snippets: Record<string, Snippet> = {
+	csis118b_welcome: {
+		id: "csis118b_welcome",
+		display_name: "CSIS-118B Welcome",
+		description: "Default CSIS-118B starter program using csis118b.inc",
+		mode: "NASM_trunk",
+		editorContent: csis118b_welcome,
+	},
 	syscall_GNU: {
 		id: "syscall_GNU",
 		display_name: "Syscall (GNU as)",
@@ -293,4 +319,4 @@ export const snippets: Record<string, Snippet> = {
 	},
 } as const;
 
-export const default_snippet: keyof typeof snippets = "syscall_FASM";
+export const default_snippet: keyof typeof snippets = "csis118b_welcome";
