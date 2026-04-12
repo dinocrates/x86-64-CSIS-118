@@ -2,16 +2,18 @@
   import { createDropdownMenu } from '@melt-ui/svelte';
   import ArrowForward from './icons/ArrowForward.svelte';
   import ArrowDropDown from './icons/ArrowDropDown.svelte';
-  import {blinkStore} from '../core/store'
+  import { get } from 'svelte/store';
+  import {blinkStore, editorContent_read} from '../core/store'
 
   import {snippetToAppState, uri_serializeAppState} from '../core/appState'
-  import { snippets, default_snippet } from "../core/example_snippets";
+  import { templates } from "../core/templates";
   import { copyTextToClipboard } from '../core/utils';
     import ControlsShareDialog from './ControlsShareDialog.svelte';
 
 
   let blink = blinkStore.getInstance()
 
+  // --- ELF upload (existing: load pre-compiled binary into emulator) ---
   let fileElem:any;
   function handleLoadExec(){
     if(!fileElem) return
@@ -33,6 +35,36 @@
     }
   }
 
+  // --- .asm upload (new: open a saved .asm file into the editor) ---
+  let asmFileElem: any;
+  function handleOpenAsm() {
+    if (!asmFileElem) return;
+    asmFileElem.click();
+  }
+  async function handleAsmUpload(e: any) {
+    if (asmFileElem && asmFileElem.files.length) {
+      const file = asmFileElem.files[0];
+      const text = await file.text();
+      blinkStore.setEditorContent(text);
+      // reset the input so the same file can be re-opened if needed
+      asmFileElem.value = '';
+    }
+  }
+
+  // --- .asm download (mirrors the Ctrl+S shortcut in App.svelte) ---
+  function downloadAsm() {
+    const content = get(editorContent_read);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'program.asm';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
 
   const {
     elements: { trigger, menu, item, separator, },
@@ -48,11 +80,11 @@
     states: { subOpen },
   } = createSubmenu();
 
-  const snippetsList = Object.values(snippets)
+  const templatesList = Object.values(templates)
 
-  function handleSnippetClick(snippetId: string){
-    let selected_snippet = snippets[snippetId]
-    let appState = snippetToAppState(selected_snippet)
+  function handleTemplateClick(templateId: string){
+    let selected_template = templates[templateId]
+    let appState = snippetToAppState(selected_template)
     blinkStore.setAppState(appState)
   }
 
@@ -62,6 +94,9 @@
 <input
   on:change={handleFileUpload}
   type="file" class="file" bind:this={fileElem} />
+<input
+  on:change={handleAsmUpload}
+  type="file" accept=".asm,.s,.nasm" class="file" bind:this={asmFileElem} />
 
 <div class="custom-overlay"></div>
 <div class="btcontainer">
@@ -80,25 +115,33 @@
 {#if $open}
   <div {...$menu} use:menu >
     <div {...$subTrigger} use:subTrigger>
-      Load example
+      Load Template
       <div class="rightSlot">
         <ArrowForward style="" height="12px" width="12px"/>
       </div>
     </div>
     {#if $subOpen}
       <div {...$subMenu} use:subMenu >
-        <div class="text">Examples</div>
-          {#each snippetsList as snippet}
+        <div class="text">Templates</div>
+          {#each templatesList as template}
             <div {...$item} use:item
-              on:m-click={_ => handleSnippetClick(snippet.id)}
-              >{snippet.display_name}</div>
+              on:m-click={_ => handleTemplateClick(template.id)}
+              >{template.display_name}</div>
           {/each}
       </div>
     {/if}
 
     <div {...$separator} use:separator />
+    <div {...$item} use:item on:m-click={handleOpenAsm}>
+      Open .asm file
+    </div>
+    <div {...$item} use:item on:m-click={downloadAsm}>
+      Save .asm file
+      <span class="shortcut">Ctrl+S</span>
+    </div>
+    <div {...$separator} use:separator />
     <div {...$item} use:item on:m-click={handleLoadExec}>
-      Load executable from your files
+      Load executable (ELF)
     </div>
 
   </div>
@@ -129,5 +172,12 @@
 
 .file{
   display: none;
+}
+
+.shortcut {
+  margin-left: auto;
+  padding-left: 1.5rem;
+  font-size: 0.8em;
+  color: var(--theme-text-fg-disabled);
 }
 </style>

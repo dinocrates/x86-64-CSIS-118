@@ -55,6 +55,8 @@
     --color-gray-t: rgba(255, 255, 255, 0.2);
     /* this color is still to be properly defined */
 
+    --color-msjc-red: #B2292E;
+
     --color-gold-50: #ffd479;
     --color-gold-100: #fdb54a;
     --color-yellow: #ffeead;
@@ -73,13 +75,13 @@
 
 :root {
     color-scheme: dark;
-    --theme-primary: var(--color-gold-100);
+    --theme-primary: var(--color-msjc-red);
     --theme-bg: var(--color-gray-400);
     --theme-text-fg-contrasting: var(--color-gray-50);
     --theme-text-fg: var(--color-gray-100);
     --theme-text-fg-disabled: var(--color-gray-250);
     --theme-link-fg: var(--color-gray-0);
-    --theme-link-underline: var(--color-gold-100);
+    --theme-link-underline: var(--color-msjc-red);
     --theme-inline-code-bg: var(--color-gray-300);
     --theme-panel-bg: var(--color-gray-500);
     --theme-panel-controls-bg: var(--color-gray-600);

@@ -3,8 +3,29 @@ import './styles/style.css';
 import DesktopLayout from './DesktopLayout.svelte';
 import MobileLayout from './MobileLayout.svelte';
 
-import {blinkStore, uploadedElf} from './core/store'
+import { get } from 'svelte/store';
+import {blinkStore, uploadedElf, editorContent_read} from './core/store'
 let blink = blinkStore.getInstance()
+
+function downloadAsm() {
+  const content = get(editorContent_read);
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'program.asm';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function handleKeyDown(e: KeyboardEvent) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    downloadAsm();
+  }
+}
 
 //make the blink wrapper accessible to the developer tools
 window['blink'] = blink;
@@ -66,7 +87,7 @@ async function handleDrop(e){
 </script>
 
 <!-- attach an action to the browser window -->
-<svelte:window bind:innerWidth />
+<svelte:window bind:innerWidth on:keydown={handleKeyDown} />
 
 <div 
   on:dragover={handleDragover}

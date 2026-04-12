@@ -1,4 +1,14 @@
 import { writable, derived, get } from "svelte/store";
+
+/**
+ * Reactive save-status store.
+ * Updated by createBlinkStore() whenever the editor content changes
+ * or an autosave completes. Consumed by SaveStatus.svelte.
+ */
+export const saveStatus = writable<{ savedAt: Date | null; dirty: boolean }>({
+  savedAt: null,
+  dirty: false,
+});
 import {Blink} from './blink'
 import {assemblers, Assemblers_key} from './assemblers'
 import {AppState, snippetToAppState, storage_getAppState, storage_setAppState, uri_getAppState} from './appState'
@@ -20,6 +30,8 @@ function createBlinkStore(){
     let selected_snippet = snippets[default_snippet]
     defaultAppState = snippetToAppState(selected_snippet)
   }
+  // Always lock to NASM — assembler selector has been removed
+  defaultAppState.mode = 'NASM_trunk'
   //remove any search param from the url as soon as the page loads
   //TODO: is this pattern good?
   window.history.replaceState(null, '', window.location.pathname);
@@ -46,11 +58,11 @@ function createBlinkStore(){
   let autoSaveTimer:any;
   subscribe(()=>{
     clearTimeout(autoSaveTimer)
-    autoSaveTimer = setTimeout(autoSave, 5*1000)
+    autoSaveTimer = setTimeout(autoSave, 1500)
   });
   function autoSave(){
-    console.log("store: autosave")
     storage_setAppState(getAppState())
+    saveStatus.set({ savedAt: new Date(), dirty: false })
   }
 
 
@@ -101,6 +113,7 @@ function createBlinkStore(){
     blink.setMode(assemblers[state.mode])
     //also save the changes in localStorage
     storage_setAppState(state)
+    saveStatus.set({ savedAt: new Date(), dirty: false })
   }
   function getAppState(): AppState{
     let storeObj = get(store);
@@ -119,6 +132,7 @@ function createBlinkStore(){
     },
     notifyEditorContent(content:string){
       update((store) => ({...store, editorContent_read: content}))
+      saveStatus.update(s => ({ ...s, dirty: true }))
     },
     setEditorContent(content:string){
       //will immediately trigger a call to notifyEditorContent

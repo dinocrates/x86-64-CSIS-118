@@ -2,8 +2,8 @@
 export let mobile;
 export let showEditor;
 
-import Logo from "./Logo.svelte";
 import ArrowBack from "./icons/ArrowBack.svelte";
+import SaveStatus from "./SaveStatus.svelte";
 import ControlsFileMenu from "./ControlsFileMenu.svelte";
 import { blinkStore, state } from "../core/store";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
@@ -47,13 +47,11 @@ function handle_back() {
 
 
 <header>
-  <a class="logo" href="https://x64.halb.it" aria-label="homepage">
-    <Logo/>
-  </a>
-  <nav>
-    <a href="https://x64.halb.it" target="_blank">About</a>
-    <a href="https://github.com/robalb/x86-64-playground" target="_blank">Github</a>
-  </nav>
+  <div class="branding">
+    <span class="branding__course">CSIS-118B</span>
+    <span class="branding__subtitle">x86-64 Assembly | Mt. San Jacinto College</span>
+  </div>
+  <SaveStatus />
 </header>
 
 <!--
@@ -101,22 +99,22 @@ function handle_back() {
       <div class="btgroup">
         <button class="btgroup__button"
           on:click={()=>blink.starti()}
-          disabled={!canstart} > 
-          starti 
+          disabled={!canstart} >
+          Debug
         </button>
         <button class="btgroup__button"
           on:click={()=>blink.run()}
-          disabled={!canstart} > 
-          run 
+          disabled={!canstart} >
+          Run
         </button>
       </div>
 
       <button class="button m-left-1" on:click={()=>blink.stepi()}
         disabled={!canstep}
-      > stepi </button>
+      > Step </button>
       <button class="button m-left-1" on:click={()=>blink.continue()}
         disabled={!canstep}
-      > continue </button>
+      > Continue </button>
 
     </section>
   <!-- /Debugger row -->
@@ -145,32 +143,27 @@ function handle_back() {
   /* -------------------- */
   /*        Header        */
   /* -------------------- */
-  header{
-    padding: .5rem;
-    padding-left: 1rem;
+  header {
+    padding: .5rem 1rem;
     display: flex;
-    align-items:center;
-    justify-content:space-between;
+    align-items: center;
+    justify-content: space-between;
     background-color: var(--theme-panel-controls-bg);
   }
-  header .logo{
-    height: 2.4rem;
-    flex-shrink:0;
+  .branding {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
   }
-  header nav{
-    color: white;
-    margin: 0 .5rem;
-    flex-shrink:0;
+  .branding__course {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--theme-primary);
   }
-  header nav a {
-    color: var(--color-gray-100);
-    text-decoration: none;
-    padding: .5rem;
-    border-radius: 8px;
-  }
-  header nav a:hover{
-    color: var(--color-gray-0);
-    background-color: var(--color-gray-300);
+  .branding__subtitle {
+    font-size: 0.72rem;
+    color: var(--color-gray-200);
+    letter-spacing: 0.03em;
   }
 
 

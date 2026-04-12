@@ -4,6 +4,7 @@ import {
 	assemblers,
 	fasm_diagnostics,
 } from "../core/assemblers";
+import csis118bInc from "../assets/csis118b.inc?raw";
 
 /**
  * Machine Cross-language struct.
@@ -609,6 +610,7 @@ export class Blink {
 		this.#setState(this.states.ASSEMBLING);
 		const FS = this.Module.FS;
 		FS.writeFile("/assembly.s", asmString);
+		FS.writeFile("/csis118b.inc", csis118bInc);
 		//this hack ensures that the function is called after a browser render pass
 		requestAnimationFrame(() => {
 			this.#setEmulationArgs(
@@ -639,7 +641,7 @@ export class Blink {
 			const FS = this.Module.FS;
 			FS.chmod("/program", 0o777);
 			this.#setState(this.states.PROGRAM_LOADED);
-			this.starti();
+			this.run();
 		} else {
 			//we need a separate linking step
 			this.#setState(this.states.LINKING);
@@ -664,7 +666,7 @@ export class Blink {
 		const FS = this.Module.FS;
 		FS.chmod("/program", 0o777);
 		this.#setState(this.states.PROGRAM_LOADED);
-		this.starti();
+		this.run();
 	}
 
 	/**
