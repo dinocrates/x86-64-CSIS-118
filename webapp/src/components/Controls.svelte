@@ -5,6 +5,7 @@ export let showEditor;
 import ArrowBack from "./icons/ArrowBack.svelte";
 import SaveStatus from "./SaveStatus.svelte";
 import ControlsFileMenu from "./ControlsFileMenu.svelte";
+import ControlsAboutDialog from "./ControlsAboutDialog.svelte";
 import { blinkStore, state } from "../core/store";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
 
@@ -51,7 +52,10 @@ function handle_back() {
     <span class="branding__course">CSIS-118B</span>
     <span class="branding__subtitle">x86-64 Assembly | Mt. San Jacinto College</span>
   </div>
-  <SaveStatus />
+  <div class="header-right">
+    <SaveStatus />
+    <ControlsAboutDialog />
+  </div>
 </header>
 
 <!--
@@ -164,6 +168,11 @@ function handle_back() {
     font-size: 0.72rem;
     color: var(--color-gray-200);
     letter-spacing: 0.03em;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
 
