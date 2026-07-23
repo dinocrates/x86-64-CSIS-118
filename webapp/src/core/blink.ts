@@ -286,6 +286,14 @@ export class Blink {
     //fake TTY readline
     stdin_bytes = [];
 
+	//when false, a successful loadASM stops at PROGRAM_LOADED
+	//instead of immediately running the program
+	#autorun = true;
+	//set by terminate(): the program is stopped at the next
+	//preemption point instead of being resumed
+	#terminateRequested = false;
+	#terminateDetails = "";
+
 	/**
 	 * Initialize the emscripten blink module.
 	 */
@@ -449,17 +457,29 @@ export class Blink {
         // The emulator paused to free the js event loop.
         if(code === sigtrap_codes.BLINK_PREEMPT){
             console.log("preempt");
+            if(this.#terminateRequested){
+                //terminate() was called: do not resume the program
+                this.#terminateRequested = false;
+                this.stopReason = {
+                    loadFail: false,
+                    exitCode: 124,
+                    details: this.#terminateDetails,
+                };
+                this.#setState(this.states.PROGRAM_STOPPED);
+                this.#signalHandler(sig, code);
+                return;
+            }
             requestAnimationFrame(() => {
                 this.Module._blinkenlib_preempt_resume();
             });
         }
         // fake SIGTRAP: it actually indicates a tty line read.
-        // Emulator paused on a read syscall, waiting for 
+        // Emulator paused on a read syscall, waiting for
         // the user to enter one line on the fake js tty.
         else if(code === sigtrap_codes.BLINK_FAKE_TTY){
             this.#setState(this.states.PROGRAM_READLINE_PAUSE);
             this.#signalHandler(sig, code);
-        } 
+        }
         // an actual SIGTRAP
         else {
             this.#signalHandler(sig, code);
@@ -600,11 +620,17 @@ export class Blink {
 	 * The state of this operation is kept via this.state.
 	 * If successful, it will be possible to launch the compiled program
 	 * via this.starti(), or this.run()
+	 *
+	 * options.autorun (default true): when false, a successful
+	 * assemble+link stops at PROGRAM_LOADED without running the program.
+	 * Used by the Check My Work test runner.
 	 */
-	loadASM(asmString: string): boolean {
+	loadASM(asmString: string, options?: { autorun?: boolean }): boolean {
 		if (this.state === this.states.NOT_READY) {
 			return false;
 		}
+		this.#autorun = options?.autorun ?? true;
+		this.#terminateRequested = false;
 		this.assembler_logs = "";
 		this.assembler_errors = [];
 		this.#setState(this.states.ASSEMBLING);
@@ -641,7 +667,7 @@ export class Blink {
 			const FS = this.Module.FS;
 			FS.chmod("/program", 0o777);
 			this.#setState(this.states.PROGRAM_LOADED);
-			this.run();
+			if (this.#autorun) this.run();
 		} else {
 			//we need a separate linking step
 			this.#setState(this.states.LINKING);
@@ -666,7 +692,7 @@ export class Blink {
 		const FS = this.Module.FS;
 		FS.chmod("/program", 0o777);
 		this.#setState(this.states.PROGRAM_LOADED);
-		this.run();
+		if (this.#autorun) this.run();
 	}
 
 	/**
@@ -675,6 +701,7 @@ export class Blink {
 	 */
 	run() {
 		try {
+			this.#terminateRequested = false;
 			this.#setState(this.states.PROGRAM_RUNNING);
 			this.#setEmulationArgs("/program", this.default_argc, this.default_argv);
 			this.Module._blinkenlib_run();
@@ -685,11 +712,36 @@ export class Blink {
 	}
 
 	/**
+	 * Request that the running program be stopped instead of resumed
+	 * at its next pause point (preemption or fake-tty input wait).
+	 * Used by the Check My Work test runner to enforce timeouts on
+	 * infinite loops and on programs that ask for unavailable input.
+	 */
+	terminate(details = "Program stopped by the test runner") {
+		if (this.state === this.states.PROGRAM_READLINE_PAUSE) {
+			//the program is already paused waiting for input:
+			//nothing will resume it, so stop it right away
+			this.stopReason = {
+				loadFail: false,
+				exitCode: 124,
+				details: details,
+			};
+			this.#setState(this.states.PROGRAM_STOPPED);
+			return;
+		}
+		if (this.state === this.states.PROGRAM_RUNNING) {
+			this.#terminateDetails = details;
+			this.#terminateRequested = true;
+		}
+	}
+
+	/**
 	 * start the program and stop at the beginning of the
 	 * main function.
 	 */
 	start() {
 		try {
+			this.#terminateRequested = false;
 			this.#setEmulationArgs("/program", this.default_argc, this.default_argv);
 			this.Module._blinkenlib_start();
 			this.#setState(this.states.PROGRAM_RUNNING);
@@ -704,6 +756,7 @@ export class Blink {
 	 */
 	starti() {
 		try {
+			this.#terminateRequested = false;
 			this.#setEmulationArgs("/program", this.default_argc, this.default_argv);
 			this.Module._blinkenlib_starti();
 			this.#setState(this.states.PROGRAM_RUNNING);

@@ -5,19 +5,13 @@ import MobileLayout from './MobileLayout.svelte';
 
 import { get } from 'svelte/store';
 import {blinkStore, uploadedElf, editorContent_read} from './core/store'
+import { downloadAsm as downloadAsmFile } from './core/download'
 let blink = blinkStore.getInstance()
 
 function downloadAsm() {
-  const content = get(editorContent_read);
-  const blob = new Blob([content], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'program.asm';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // the filename is assignment-aware: <assignment-id>.asm when an
+  // assignment is selected, program.asm otherwise
+  downloadAsmFile(get(editorContent_read), get(blinkStore).assignmentId);
 }
 
 function handleKeyDown(e: KeyboardEvent) {

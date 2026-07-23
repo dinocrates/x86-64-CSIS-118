@@ -8,6 +8,7 @@
   import {snippetToAppState, uri_serializeAppState} from '../core/appState'
   import { templates } from "../core/templates";
   import { copyTextToClipboard } from '../core/utils';
+  import { downloadAsm as downloadAsmFile } from '../core/download';
     import ControlsShareDialog from './ControlsShareDialog.svelte';
 
 
@@ -52,17 +53,9 @@
   }
 
   // --- .asm download (mirrors the Ctrl+S shortcut in App.svelte) ---
+  // filename is assignment-aware: <assignment-id>.asm when selected
   function downloadAsm() {
-    const content = get(editorContent_read);
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'program.asm';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadAsmFile(get(editorContent_read), get(blinkStore).assignmentId);
   }
 
 
@@ -83,6 +76,11 @@
   const templatesList = Object.values(templates)
 
   function handleTemplateClick(templateId: string){
+    const confirmed = window.confirm(
+      'Loading this template will replace the current editor contents. ' +
+      'Download your current code first if you want to keep it. Continue?'
+    )
+    if(!confirmed) return
     let selected_template = templates[templateId]
     let appState = snippetToAppState(selected_template)
     blinkStore.setAppState(appState)

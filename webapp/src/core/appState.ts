@@ -1,5 +1,6 @@
-import {Assemblers_key, assemblers} from './assemblers'
-import {Snippet} from './example_snippets'
+import {assemblers} from './assemblers'
+import type {Assemblers_key} from './assemblers'
+import type {Snippet} from './example_snippets'
 import {compressStringToBase64, decompressBase64ToString} from './compression'
 
 
@@ -75,7 +76,7 @@ function isSerializedAppState(obj: any): obj is SerializedAppState {
   );
 }
 
-function serializeAppState(state: AppState): string{
+export function serializeAppState(state: AppState): string{
   const serialized: SerializedAppState = {
     magic: "it.halb.x64",
     version: APPSTATE_VERSION,
@@ -85,7 +86,7 @@ function serializeAppState(state: AppState): string{
   return compressStringToBase64(jsonString)
 }
 
-function deserializeAppState(serialized: string): AppState | null{
+export function deserializeAppState(serialized: string): AppState | null{
   if (!serialized) return null;
   try {
     const jsonstring = decompressBase64ToString(serialized)

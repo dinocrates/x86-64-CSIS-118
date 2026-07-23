@@ -6,6 +6,8 @@ import ArrowBack from "./icons/ArrowBack.svelte";
 import SaveStatus from "./SaveStatus.svelte";
 import ControlsFileMenu from "./ControlsFileMenu.svelte";
 import ControlsAboutDialog from "./ControlsAboutDialog.svelte";
+import AssignmentSelector from "./AssignmentSelector.svelte";
+import TestResultsPanel from "./TestResultsPanel.svelte";
 import { blinkStore, state } from "../core/store";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
 
@@ -132,6 +134,11 @@ function handle_back() {
 
 
 </div>
+
+{#if (showEditor || !mobile) && !$blinkStore.uploadedElf}
+  <AssignmentSelector />
+  <TestResultsPanel />
+{/if}
 
 
 {#if mobile && !showEditor && $state == blink.states.PROGRAM_STOPPED}
