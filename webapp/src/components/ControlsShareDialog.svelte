@@ -4,8 +4,12 @@
   import Close from './icons/Close.svelte';
   import Clipboard from './icons/Clipboard.svelte';
   import { copyTextToClipboard } from '../core/utils';
-  import {uri_serializeAppState} from '../core/appState'
-  import {blinkStore} from '../core/store'
+  import {blinkStore, selectedAssignment} from '../core/store'
+  import {
+    buildShareLink,
+    SHARE_LINK_DANGEROUS_LEN,
+    SHARE_LINK_MAX_LEN,
+  } from '../core/shareLink'
 
   const {
     elements: { trigger, portalled, overlay, content, title, description, close },
@@ -15,10 +19,10 @@
   let inputDomnode:any;
   let uri:string = "";
   let urilen = 0;
-  let dangerouslen = 2048;
-  let maxlen = 8100;
+  let dangerouslen = SHARE_LINK_DANGEROUS_LEN;
+  let maxlen = SHARE_LINK_MAX_LEN;
   function updater(node){
-    uri = uri_serializeAppState(blinkStore.getAppState(), true)
+    uri = buildShareLink()
     urilen = uri.length
 
     //analytics
@@ -55,8 +59,14 @@
         </p>
       {:else}
         <p {...$description} use:description>
-          Copy this link to share your playground code
-          with others.
+          {#if $selectedAssignment}
+            Copy this link to share your {$selectedAssignment.title} code.
+            Opening it reopens this exact code in this assignment — you
+            can also paste it into Canvas as your submission.
+          {:else}
+            Copy this link to share your playground code
+            with others.
+          {/if}
         </p>
           <div class="btgroup">
           <input class="btgroup__button" 
@@ -80,9 +90,9 @@
           </button>
           </div>
         {#if urilen >= dangerouslen}
-          <p class="errorbox m-top-1"> Note: This link is {urilen} characters long,
-            some social media will not allow you to post it in its
-            entire length
+          <p class="errorbox m-top-1"> Note: This link is {urilen} characters long.
+            It will still work when pasted into Canvas, but character-limited
+            sites like social media may not allow you to post it in full.
           </p>
         {/if}
       {/if}

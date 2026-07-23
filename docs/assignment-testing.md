@@ -5,8 +5,11 @@ starter code, visible student-facing tests, Canvas deep links, and how the
 pieces fit together.
 
 **Audience:** the instructor maintaining this repository.
-**Student-facing feature name:** *Check My Work* (never "grade", "submit",
-or "autograde" — see [Why this is not grading](#why-check-my-work-is-not-official-grading)).
+**Student-facing feature name:** *Check My Work* (never "grade" or
+"autograde" for the practice checks themselves — see
+[Why this is not grading](#why-check-my-work-is-not-official-grading)).
+Submission uses a separate, explicitly-labeled **Copy Submission Link**
+action — see [Submitting via the submission link](#submitting-via-the-submission-link).
 
 ---
 
@@ -19,10 +22,13 @@ or "autograde" — see [Why this is not grading](#why-check-my-work-is-not-offic
   selects that assignment automatically, restoring the student's saved
   work for it (or the starter code on first open).
 - Students write code, click **Check My Work**, read the feedback, fix,
-  repeat — then download `<assignment-id>.asm` and submit it in Canvas.
+  repeat — then click **Copy Submission Link** and paste it into Canvas
+  as their submission.
 - All checks run inside a second, dedicated copy of the in-browser
   emulator, so the student's editor/debugger state is never disturbed.
-  Nothing ever leaves the browser.
+  Nothing ever leaves the browser — the submission link itself is just
+  the code, gzip-compressed and base64-encoded into the URL; opening it
+  requires no server either.
 
 ---
 
@@ -373,6 +379,61 @@ Practical notes:
 
 ---
 
+## Submitting via the submission link
+
+Students submit an assignment by clicking **Copy Submission Link** (next
+to Check My Work, visible whenever an assignment is selected) and
+pasting the copied URL into Canvas.
+
+### How it works
+
+The button copies the same link the **Share** button produces — the
+current editor content, the assembler mode, and the selected assignment
+id, gzip-compressed and base64url-encoded straight into the URL
+(`?appstate=<blob>`, schema v2 — see `core/appState.ts`). Nothing is
+uploaded anywhere to generate it. Opening that link, whether by a
+classmate, a TA, or you in SpeedGrader:
+
+1. resolves the assignment id and selects it,
+2. loads the **exact** code from the link — not the opener's local
+   autosave for that assignment, not the starter code,
+3. arms that assignment's Check My Work tests, so you can re-run them
+   immediately if you want to.
+
+Because a `?appstate=` link with an assignment id is treated as an
+explicit "show me exactly this" request, it takes priority over both a
+bare `?assignment=` Canvas deep link and any locally saved work — see
+the priority order documented at the top of `createBlinkStore()` in
+`core/store.ts`.
+
+### Setting up the Canvas assignment
+
+In the Canvas assignment's **Submission Type**, choose **Online** →
+**Website URL**. Students paste the copied link into that field and
+submit normally. To grade, open the submitted URL from SpeedGrader — it
+reopens the exact code the student had when they copied the link.
+
+### Limitations
+
+- **Link length.** Some browsers/servers cap URL length around 8,192
+  characters. The button checks the encoded length and, for programs
+  that would exceed the safe limit (`SHARE_LINK_MAX_LEN` in
+  `core/shareLink.ts`), refuses to copy and tells the student to
+  download their `.asm` file and submit that instead. This is very
+  unlikely for typical assignment-sized programs but can happen on
+  large, later-unit assignments — consider also accepting a file upload
+  as a fallback submission type for those.
+- **The link reflects whatever was in the editor when it was copied.**
+  If a student keeps editing after copying the link, the link does not
+  update — that is the point (it is a snapshot), but remind students to
+  copy the link *last*, after they are done.
+- **It is still not a grade.** A submission link proves what code was
+  submitted; it says nothing about correctness beyond whatever Check My
+  Work checks exist for that assignment. Grade the code as you would a
+  file upload.
+
+---
+
 ## How assignment-aware autosave works
 
 Every assignment saves to its own browser localStorage key:
@@ -403,13 +464,15 @@ csis118b.autosave.unit02-register-arithmetic
 
 - **`.asm` file:** Ctrl+S or *File → Save .asm file*. Named
   `<assignment-id>.asm` when an assignment is selected (e.g.
-  `unit02-register-arithmetic.asm`), else `program.asm`. This is what
-  students submit in Canvas.
+  `unit02-register-arithmetic.asm`), else `program.asm`. The primary
+  submission path is the [submission link](#submitting-via-the-submission-link);
+  this download is the fallback for programs too large to link, and for
+  a student's own backup/records across devices.
 - **Test report:** after running checks, *Download Test Report* saves
   `csis118b-<assignment-id>-test-report.txt` — assignment, timestamp,
   summary, per-test results, and a `sha256` hash of the exact source
-  that was checked, so you can tell whether a report matches the `.asm`
-  a student submitted. No student name is collected or included.
+  that was checked, so you can tell whether a report matches the code a
+  student submitted. No student name is collected or included.
 
 ---
 
@@ -424,14 +487,18 @@ browser**. That means:
 2. Passing visible checks proves the contract cases pass, not that the
    solution meets every requirement (style, comments, techniques).
 3. The student-facing note says exactly this: *"Check My Work runs
-   practice tests in your browser. Passing these tests does not submit
-   your assignment and does not guarantee full credit."*
+   practice tests in your browser. Passing these tests does not
+   guarantee full credit."*
 
-Grade in Canvas as usual, from the submitted `.asm`. If you later want
-private/hidden tests, run them **locally**: the same
-`AssignmentConfig`/test shapes are designed so a future instructor-only
-batch grader can reuse them against downloaded Canvas submissions —
-keep hidden tests out of this repository's deployed code.
+This is a separate concern from *how* work reaches you (the
+[submission link](#submitting-via-the-submission-link) or a `.asm`
+upload both work fine as a submission mechanism) — it's about what
+passing the visible checks does and doesn't prove. Grade the submitted
+code as you would a file upload. If you later want private/hidden
+tests, run them **locally**: the same `AssignmentConfig`/test shapes
+are designed so a future instructor-only batch grader can reuse them
+against downloaded submissions — keep hidden tests out of this
+repository's deployed code.
 
 ---
 
@@ -455,6 +522,19 @@ keep hidden tests out of this repository's deployed code.
 - `webapp/src/core/assignmentUrl.ts` / `assignmentAutosave.ts` — deep
   link and per-assignment storage helpers; `core/store.ts` wires them
   into app startup and the assignment dropdown.
+- `webapp/src/core/appState.ts` — the serialization envelope shared by
+  autosave and share/submission links (`{editorContent, mode,
+  assignmentId}`, gzip+base64url via `compression.ts`). Versioned:
+  `deserializers[1]` reads links from before the assignment system
+  existed (no `assignmentId`) so old bookmarks keep working;
+  `deserializers[2]` adds the optional `assignmentId`. Bump
+  `APPSTATE_VERSION` and add a new numbered deserializer if the shape
+  changes again — never edit an existing deserializer in place.
+- `webapp/src/core/shareLink.ts` — the submission-link builder and the
+  `SHARE_LINK_DANGEROUS_LEN` / `SHARE_LINK_MAX_LEN` length thresholds,
+  shared by `ControlsShareDialog.svelte` (generic Share) and
+  `CopySubmissionLinkButton.svelte` (assignment submission — same link
+  format, different entry point and copy).
 - Entry-point rules for procedure tests: if the student file includes
   `csis118b.inc` (which provides `_start` → `main`), the harness is
   `main`; otherwise the harness provides `_start`. Conflicts (student

@@ -7,8 +7,10 @@ import type {
  * File download helpers.
  *
  * The .asm filename is assignment-aware: when an assignment is selected
- * the download is named <assignment-id>.asm, which is what students
- * submit in Canvas.
+ * the download is named <assignment-id>.asm. The primary submission path
+ * is the Copy Submission Link button (see core/shareLink.ts); this file
+ * is a backup for programs too large to share as a link, or for a
+ * student's own records.
  */
 
 export function downloadTextFile(filename: string, content: string): void {
@@ -84,8 +86,8 @@ export function formatTestReport(report: AssignmentTestReport): string {
 		"",
 		"----",
 		"Check My Work runs practice tests in your browser. Passing these",
-		"tests does not submit your assignment and does not guarantee full",
-		"credit. Submit your .asm file in Canvas when you are finished.",
+		"tests does not guarantee full credit. Submit your work in Canvas",
+		"(Copy Submission Link, or the downloaded .asm file) when finished.",
 		"",
 	);
 	return lines.join("\n");

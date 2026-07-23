@@ -16,9 +16,15 @@ import {compressStringToBase64, decompressBase64ToString} from './compression'
 export interface AppState {
   editorContent: string;
   mode: Assemblers_key;
+  /**
+   * The assignment this snapshot belongs to, or null/undefined for free
+   * practice. Only present from schema version 2 onward — this is what
+   * lets a Share link reopen the right assignment, not just the code.
+   */
+  assignmentId?: string | null;
 }
 
-const APPSTATE_VERSION = 1;
+const APPSTATE_VERSION = 2;
 
 /**
 * This interface cannot change between versions,
@@ -41,7 +47,9 @@ interface SerializedAppState {
 */
 const deserializers = {
   /**
-  * Deserialize a Serialized AppState V1 into the current AppState
+  * Deserialize a Serialized AppState V1 into the current AppState.
+  * V1 links predate the assignment system: they never carry an
+  * assignmentId, so they always open in free practice mode.
   */
   1: function(serialized:SerializedAppState): AppState{
     let ret: AppState = null;
@@ -57,6 +65,33 @@ const deserializers = {
       ret = {
         editorContent: obj.editorContent,
         mode: obj.mode,
+      }
+    }
+    return ret;
+  },
+  /**
+  * Deserialize a Serialized AppState V2 into the current AppState.
+  * V2 adds an optional assignmentId, so a Share link can carry which
+  * assignment the code belongs to, not just the code itself.
+  */
+  2: function(serialized:SerializedAppState): AppState{
+    let ret: AppState = null;
+    let obj: any = serialized.data;
+    let obj_is_valid = (
+      typeof obj === 'object' &&
+        obj !== null &&
+        typeof obj.editorContent === 'string' &&
+        typeof obj.mode === 'string' &&
+        assemblers.hasOwnProperty(obj.mode) &&
+        (obj.assignmentId === undefined ||
+          obj.assignmentId === null ||
+          typeof obj.assignmentId === 'string')
+    );
+    if(obj_is_valid){
+      ret = {
+        editorContent: obj.editorContent,
+        mode: obj.mode,
+        assignmentId: obj.assignmentId ?? null,
       }
     }
     return ret;

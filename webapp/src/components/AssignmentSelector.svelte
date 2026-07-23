@@ -8,6 +8,7 @@
   } from '../core/store';
   import { dismissCheckResults } from '../testing/reportStore';
   import CheckMyWorkButton from './CheckMyWorkButton.svelte';
+  import CopySubmissionLinkButton from './CopySubmissionLinkButton.svelte';
 
   function handleSelect(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
@@ -59,6 +60,7 @@
     <p class="assignment__description">{$selectedAssignment.description}</p>
     <div class="assignment__row assignment__actions">
       <CheckMyWorkButton />
+      <CopySubmissionLinkButton />
       <button
         type="button"
         class="button button--secondary"
@@ -67,6 +69,10 @@
         Reset to Starter Code
       </button>
     </div>
+    <p class="assignment__submitnote">
+      When you're finished, click <strong>Copy Submission Link</strong> and
+      paste it into Canvas.
+    </p>
   {/if}
 </div>
 
@@ -111,6 +117,11 @@
   }
   .assignment__actions {
     margin-top: 0.1rem;
+  }
+  .assignment__submitnote {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--color-gray-200);
   }
   .assignment__warning {
     margin: 0;

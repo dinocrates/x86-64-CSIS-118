@@ -244,6 +244,100 @@ body {
     outline: none;
 }
 
+/** Pane content shell
+ * Shared by every debugger panel (Disassembly, Registers, Terminal,
+ * Stack memory). Global (not svelte-scoped) because it's reused across
+ * DesktopLayout.svelte and CollapsiblePane.svelte.
+ */
+.pane {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    height: 100%;
+}
+
+.pane__bar {
+    height: 2rem;
+    flex-shrink: 0;
+    padding-left: 1rem;
+    padding-right: .4rem;
+    background-color: var(--theme-panel-controls-bg);
+    border-bottom: 1px solid var(--theme-panel-border);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pane__bar p {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.pane__content {
+    overflow: auto;
+    height: 100%;
+}
+
+/** Collapsible pane
+ * Used by CollapsiblePane.svelte for panels (Disassembly, Stack memory)
+ * that can shrink down to a labeled bar.
+ */
+.pane__collapsebt {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid var(--color-gray-t);
+    border-radius: 4px;
+    color: var(--color-gray-150);
+    cursor: pointer;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    font-size: 1rem;
+    padding: 0;
+}
+
+.pane__collapsebt:hover {
+    background-color: var(--color-gray-300);
+    color: var(--color-gray-0);
+}
+
+.collapsedbar {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    background-color: var(--theme-panel-controls-bg);
+    color: var(--color-gray-150);
+}
+
+.collapsedbar:hover {
+    background-color: var(--color-gray-300);
+    color: var(--color-gray-0);
+}
+
+.collapsedbar:focus-visible {
+    outline: 3px solid var(--theme-focus);
+    outline-offset: -3px;
+}
+
+.collapsedbar__label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: .85rem;
+    letter-spacing: .03em;
+    white-space: nowrap;
+    user-select: none;
+}
+
 /** Disassembly panel
  * The disassembly panel is managed via manual DOM updates,
  * bypassing the svelte renderer completely.

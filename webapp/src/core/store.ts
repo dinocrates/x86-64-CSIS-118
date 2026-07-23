@@ -41,31 +41,49 @@ function createBlinkStore(){
 
   // Set the initial store content by inspecting the available
   // AppData sources, in order of importance:
-  // 1. a valid ?assignment=<id> deep link (saved work if any, else starter)
-  // 2. a ?appstate=... share link
+  // 1. a ?appstate=... share link. When it carries an assignmentId (V2+
+  //    links only — see appState.ts) this is an explicit "load exactly
+  //    this code, for this assignment" request, e.g. a link a student
+  //    shares to hand in or show their work. It wins over both a bare
+  //    ?assignment= deep link and any locally saved work, since sharing
+  //    a link is meaningless if opening it doesn't show that exact code.
+  // 2. a bare ?assignment=<id> deep link (e.g. a Canvas iframe): saved
+  //    work for that assignment if any, else its starter code.
   // 3. the free-practice autosave
   // 4. the default welcome snippet
   let initialAssignmentId: string | null = null;
   let defaultAppState: AppState = null;
 
-  const urlAssignmentId = getAssignmentIdFromUrl();
-  if(urlAssignmentId){
-    const urlAssignment = getAssignmentById(urlAssignmentId);
-    if(urlAssignment){
-      initialAssignmentId = urlAssignment.id;
-      defaultAppState = autosave_load(urlAssignment.id);
-      if(!defaultAppState){
-        defaultAppState = {
-          editorContent: urlAssignment.starterCode,
-          mode: 'NASM_trunk',
-        }
+  const sharedState = uri_getAppState();
+  if(sharedState){
+    defaultAppState = sharedState;
+    if(sharedState.assignmentId){
+      const sharedAssignment = getAssignmentById(sharedState.assignmentId);
+      if(sharedAssignment){
+        initialAssignmentId = sharedAssignment.id;
+      } else {
+        // the code is still worth loading — only the assignment tag is stale
+        urlAssignmentNotFound.set(true);
       }
-    } else {
-      urlAssignmentNotFound.set(true);
     }
   }
   if(!defaultAppState){
-    defaultAppState = uri_getAppState()
+    const urlAssignmentId = getAssignmentIdFromUrl();
+    if(urlAssignmentId){
+      const urlAssignment = getAssignmentById(urlAssignmentId);
+      if(urlAssignment){
+        initialAssignmentId = urlAssignment.id;
+        defaultAppState = autosave_load(urlAssignment.id);
+        if(!defaultAppState){
+          defaultAppState = {
+            editorContent: urlAssignment.starterCode,
+            mode: 'NASM_trunk',
+          }
+        }
+      } else {
+        urlAssignmentNotFound.set(true);
+      }
+    }
   }
   if(!defaultAppState){
     defaultAppState = defaultPracticeAppState()
@@ -171,6 +189,9 @@ function createBlinkStore(){
     return {
       editorContent: storeObj.editorContent_read,
       mode: storeObj.mode,
+      //carried through so a Share link reopens the right assignment,
+      //not just the code (see ControlsShareDialog.svelte)
+      assignmentId: storeObj.assignmentId,
     };
   }
 

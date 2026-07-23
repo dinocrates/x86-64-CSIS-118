@@ -49,7 +49,6 @@ export const MESSAGES = {
 		"Check for an infinite loop or a missing ret instruction.",
 	checkMyWorkNote:
 		"Check My Work runs practice tests in your browser. Passing these " +
-		"tests does not submit your assignment and does not guarantee full " +
-		"credit. Download your .asm file and submit it in Canvas when you " +
-		"are finished.",
+		"tests does not guarantee full credit. When you are finished, click " +
+		"Copy Submission Link and paste it into Canvas.",
 } as const;
