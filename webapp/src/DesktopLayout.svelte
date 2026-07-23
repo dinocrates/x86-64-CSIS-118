@@ -32,7 +32,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 			<Pane defaultSize={65} class="pf__pane">
 				<PaneGroup direction="horizontal" class="pf__panegroup pf__panegroup--horizontal">
 
-					<CollapsiblePane title="Disassembly" defaultSize={35} minSize={15}>
+					<CollapsiblePane title="Disassembly" defaultSize={35} minSize={15} defaultCollapsed={true}>
 						<Disassembler />
 					</CollapsiblePane>
 
@@ -50,7 +50,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 
 					<PaneResizer class="pf__resizer pf__resizer--vertical" />
 
-					<CollapsiblePane title="Stack memory" defaultSize={35} minSize={15}>
+					<CollapsiblePane title="Stack memory" defaultSize={35} minSize={15} defaultCollapsed={true}>
 						<Hexdump />
 					</CollapsiblePane>
 

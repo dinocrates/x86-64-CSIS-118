@@ -7,9 +7,18 @@
   export let minSize = 15;
   export let maxSize = 100;
   export let collapsedSize = 4;
+  export let defaultCollapsed = false;
 
   let pane: PaneAPI | undefined;
   let collapsed = false;
+  let appliedDefaultCollapsed = false;
+
+  // Pane doesn't have a "start collapsed" prop, so collapse it ourselves
+  // as soon as the imperative API is bound. Runs once.
+  $: if (pane && defaultCollapsed && !appliedDefaultCollapsed) {
+    appliedDefaultCollapsed = true;
+    pane.collapse();
+  }
 </script>
 
 <Pane
