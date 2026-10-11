@@ -5,6 +5,7 @@ import { unit03BranchingStarter } from "./starters/unit03_branching.asm";
 import { unit01HelloTests } from "./tests/unit01_hello.tests";
 import { unit02ArithmeticTests } from "./tests/unit02_arithmetic.tests";
 import { unit03BranchingTests } from "./tests/unit03_branching.tests";
+import { unit01Instructions } from "./instructions/unit01";
 
 /**
  * The CSIS-118B assignment list.
@@ -21,12 +22,18 @@ import { unit03BranchingTests } from "./tests/unit03_branching.tests";
 
 export const unit01HelloAssignment: AssignmentConfig = {
 	id: "unit01-hello-assembly",
-	title: "Unit 1 - Hello Assembly",
+	title: "Unit 1 — My First Assembly Program",
 	unit: "Unit 1",
 	description:
-		"Print the greeting message to the screen using the csis118b.inc library.",
+		"Personalize, run, debug, document, and share your first NASM program. 30 points, graded by your instructor.",
 	starterCode: unit01HelloStarter,
 	tests: unit01HelloTests,
+	instructions: unit01Instructions,
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header and identifying message with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+		{ pattern: "Hello, Assembly!", message: "Personalize the starter greeting “Hello, Assembly!”." },
+	],
 };
 
 export const unit02ArithmeticAssignment: AssignmentConfig = {

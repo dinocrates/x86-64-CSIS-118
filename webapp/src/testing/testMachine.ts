@@ -38,6 +38,7 @@ export interface RunOutcome {
 export class TestMachine {
 	#blink: Blink;
 	#stdout = "";
+	#stderr = "";
 	#stateListeners = new Set<(state: string) => void>();
 
 	constructor() {
@@ -48,7 +49,7 @@ export class TestMachine {
 				this.#stdout += String.fromCharCode(charcode);
 			},
 			(charcode: number) => {
-				this.#stdout += String.fromCharCode(charcode);
+				this.#stderr += String.fromCharCode(charcode);
 			},
 			() => {},
 			(state: string) => {
@@ -106,6 +107,7 @@ export class TestMachine {
 		await this.ensureReady();
 		const states = this.#blink.states;
 		this.#stdout = "";
+		this.#stderr = "";
 		const settled = this.#waitState(
 			(state) =>
 				state === states.PROGRAM_LOADED || state === states.READY,
@@ -113,7 +115,7 @@ export class TestMachine {
 		);
 		this.#blink.loadASM(source, { autorun: false });
 		const got = await settled;
-		const logs = this.#stdout.trim();
+		const logs = (this.#stdout + this.#stderr).trim();
 		if (got === null) {
 			return { ok: false, timedOut: true, logs, diagnostics: [] };
 		}
@@ -136,6 +138,7 @@ export class TestMachine {
 		const states = this.#blink.states;
 		const blink = this.#blink;
 		this.#stdout = "";
+		this.#stderr = "";
 		let ranOutOfInput = false;
 		let timedOut = false;
 		const lines = stdinText === undefined ? [] : stdinText.split("\n");
@@ -191,7 +194,9 @@ export class TestMachine {
 			((reason?.loadFail ?? false) ||
 				(exitCode !== null && exitCode >= 128));
 		return {
-			stdout: stripTerminalPrompt(this.#stdout),
+			stdout: new TextDecoder().decode(Uint8Array.from(
+				stripTerminalPrompt(this.#stdout), (char) => char.charCodeAt(0),
+			)),
 			exitCode,
 			crashed,
 			stopDetails: reason?.details ?? "",

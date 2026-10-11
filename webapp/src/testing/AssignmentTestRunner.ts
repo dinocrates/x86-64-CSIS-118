@@ -21,7 +21,8 @@ import {
 	formatU64,
 } from "./registerChecks";
 import { hasLabel, runSourceCheckTest } from "./sourceChecks";
-import { compareStdout } from "./stdoutCompare";
+import { checkMessageLines, compareStdout } from "./stdoutCompare";
+import { personalizationReminders } from "./personalization";
 import {
 	type HarnessRequest,
 	buildProcedureHarness,
@@ -259,6 +260,7 @@ export async function runAssignmentTests(
 		results: ordered,
 		timestamp: new Date().toISOString(),
 		sourceSha256,
+		reminders: personalizationReminders(sourceCode, assignment),
 	};
 }
 
@@ -399,6 +401,28 @@ async function runStdoutTest(
 			}),
 			loadedSource,
 		};
+	}
+	if (test.expectedExitCode !== undefined && run.exitCode !== test.expectedExitCode) {
+		return {
+			result: finish(test, "failed", {
+				message: `Expected exit status ${test.expectedExitCode}; received ${run.exitCode ?? "no exit status"}. Finish with the course exit macro.`,
+				actual: truncate(actual),
+			}),
+			loadedSource,
+		};
+	}
+	if (test.messageLines) {
+		const problem = checkMessageLines(actual, test.messageLines);
+		return {
+			result: finish(test, problem ? "failed" : "passed", {
+				message: problem ?? "Your program ran successfully and printed two message lines. Review personalization and the manual checklist before submitting.",
+				actual: truncate(actual),
+			}),
+			loadedSource,
+		};
+	}
+	if (test.expectedStdout === undefined) {
+		throw new Error("A stdout check needs expectedStdout or messageLines.");
 	}
 
 	const mode = test.compareMode ?? "normalized";

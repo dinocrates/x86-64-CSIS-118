@@ -9,7 +9,7 @@
   async function handle_compile(){
     blink.loadASM($blinkStore.editorContent_read);
     //analytics
-    if(window.hasOwnProperty("goatcounter")){
+    if(typeof window.goatcounter?.count === 'function'){
       window.goatcounter.count({
           path:  function(p) { return 'click-compile-' + p },
           event: true,

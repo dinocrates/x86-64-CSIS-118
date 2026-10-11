@@ -13,6 +13,147 @@ action — see [Submitting via the submission link](#submitting-via-the-submissi
 
 ---
 
+## Unit 1 — My First Assembly Program
+
+The former **Unit 1 - Hello Assembly** entry is the corresponding introductory
+greeting exercise, using `main` and `csis118b.inc`. It is updated in place under
+the permanent ID **`unit01-hello-assembly`**, preserving its deep links and
+autosave key. Existing saved work is restored as-is; a student can download it
+before confirming **Reset to Starter Code** to obtain the new annotated starter.
+Units 2 and 3, templates, and free practice retain their existing behavior.
+
+After publication, use this exact launch URL:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit01-hello-assembly
+```
+
+This is the URL supported by the implementation, not a claim that the changes
+have already been published. Assignment selection, a refresh, or a deep link
+restores saved work before considering the starter. V2 shared source and its
+assignment ID take precedence over a conflicting `assignment` query parameter
+and autosave. Legacy V1 shares keep their source and open in free practice.
+The gzip/base64url format and version are unchanged.
+
+### Canvas handoff
+
+Use **Canvas Text Entry**, worth **30 points**. Replace the existing directions
+to select free practice and paste a starter with this exact sentence:
+
+> Open Unit 1 — My First Assembly Program from the Assignment menu and load its starter.
+
+Students submit the tested share link, two output lines, and three short written
+responses (debugger observation, program organization, workflow). The downloaded
+`Lastname_Firstname_U01.asm` is their saved copy. The app retains its existing
+download filename; students rename it if their browser downloads automatically.
+No screenshots or separate response collection are required. The due-date text
+is **See the due date shown in Canvas**.
+
+### Checks and review boundaries
+
+Unit 1 uses the existing full-program `assemble` and `stdout` path in the
+separate practice-check emulator. The source is assembled unchanged, including
+its `main` and include; it never goes through the procedure harness.
+`Blink.loadASM` supplies `src/assets/csis118b.inc` directly to the emulator's
+virtual filesystem. Students need no helper download or second entry point.
+
+The `stdout` schema additionally supports `messageLines` (line count and the
+identifying prefix on the last line) and `expectedExitCode`. Unit 1 requires
+status zero, exactly two nonempty message lines, and a nonempty name after
+`Programmer:`. Output capture excludes stderr and the emulator launch prompt,
+decodes UTF-8, normalizes CRLF, and ignores only one final newline. Spaces and
+extra blank lines are not collapsed. Names have no first/last-name or character
+pattern requirement. Existing fixed-output checks still use `expectedStdout`.
+
+Compilation failures block execution; the existing runtime timeout is 5 seconds
+(and the emulator also has an instruction limit). Checks leave the editor and
+paused debugger alone. Changes to source or assignment invalidate displayed
+results, including results from a run still in progress. A run retains its lock
+through assignment switches so two checks cannot overlap in the shared test
+emulator. Students rerun checks after editing.
+
+Literal source reminders flag `Your Name`, `YYYY-MM-DD`, and the starter greeting.
+They are advisory and can also match a literal retained in a comment. They are
+separate from the execution checks and cannot establish identity, originality,
+documentation quality, or submission readiness. The unmodified starter passes
+execution checks and still displays all three reminders. No practice points are
+configured for Unit 1. Instructor grading is 12 + 6 + 6 + 6, with partial credit.
+
+The RBX observation stays manual: use Debug, expand Disassembly, Step to the
+first load in `main`, then execute it and observe `0x2a` (42). NASM may encode it
+as `mov ebx, 0x2a`. Checking the final register after helper calls is not a
+replacement for this observation. Comments, the debugging process, and the
+Canvas responses remain instructor review items.
+
+### Local validation and publication (PowerShell)
+
+From the repository root, using the existing Node 20/npm 10 toolchain:
+
+```powershell
+Set-Location .\webapp
+npm ci
+npx playwright install chromium
+npm run build
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+npm run preview -- --host 127.0.0.1
+```
+
+Open the printed localhost origin at
+`/x86-64-CSIS-118/index.html?assignment=unit01-hello-assembly`.
+The test suite starts/stops its own Vite development and production-preview
+servers on ports 4173 and 4174. It runs the actual bundled NASM, linker, Blink
+WASM, and browser UI; it is not a native-assembler substitute or mocked runner.
+An existing Chromium/Edge executable can be selected instead of downloading one:
+
+```powershell
+$env:PLAYWRIGHT_EXECUTABLE_PATH = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+npm test
+```
+
+When ready to publish, review and commit the intended changes, then push that
+commit to `master` (or merge a reviewed branch there). The existing
+**Update GitHub Pages** workflow runs `npm ci` and `npm run build` for changes
+under `webapp/**`, uploads `webapp/dist`, and deploys via GitHub Pages. It also
+supports **Run workflow** (`workflow_dispatch`). Keep the Vite base
+`/x86-64-CSIS-118/`; no hosting configuration change is needed. After that
+workflow succeeds, test the launch URL above and update the Canvas directions.
+Repository implementation does not itself publish, push, or edit Canvas.
+
+### Implementation verification
+
+The complete eight-test Playwright suite passed using local Chromium with the
+real browser NASM/linker/Blink execution path. Coverage includes the exact starter
+output and status zero; personalized names (including apostrophes, hyphens, and
+Unicode); assembler failures; a nonzero exit; incomplete output; stderr exclusion;
+infinite-loop timeout and recovery; source-edit invalidation; paused-debugger
+isolation; save/open; reset confirmation; autosave/revisit; legacy shares; other
+assignment/free-practice recovery; and production assets under the Pages subpath.
+Browser controls reached `mov ebx, 0x2a` in `main`; one Step displayed RBX `0x2a`
+immediately afterward. This was a browser interaction check, not a source-only
+assertion or final-register check. No separate native-assembler validation was
+used. The starter was also compared directly with the supplied complete text:
+1,666 characters / 36 lines with line endings normalized.
+
+After the final dialog change, the four affected browser tests passed again
+(`npm test -- --grep 'starter launches|edits invalidate|share source|built Pages'`).
+That pass additionally exercised the check lock while switching assignments,
+a share URL longer than 2,048 characters with a conflicting autosave, and the
+production dialog's Escape-to-close behavior. Desktop/mobile visual inspection
+and keyboard End scrolling of the instructions also passed.
+
+`npm run build`, `tsc -p tsconfig.typecheck.json`, and `git diff --check` passed.
+The existing build warnings in Registers, Hexdump, Terminal, and TerminalInput
+remain. Blink emits known unsupported optional syscall warnings (`mprotect`,
+`prlimit64`, `getrusage`) while the bundled NASM/linker start; these are explicitly
+allowlisted in the production browser check, which fails on other console errors.
+The tests stub the third-party analytics script. Compile and Share now check
+whether its callback exists, so offline/blocked analytics produces no exception.
+Local icon/manifest paths now respect the Pages base, and the manifest's missing
+comma is repaired; the deployment workflow and Vite base are unchanged.
+
+---
+
 ## How the system works (one-minute version)
 
 - Each assignment is an `AssignmentConfig` object: an id, title,
@@ -408,7 +549,11 @@ the priority order documented at the top of `createBlinkStore()` in
 
 ### Setting up the Canvas assignment
 
-In the Canvas assignment's **Submission Type**, choose **Online** →
+For **Unit 1 — My First Assembly Program**, choose **Online** → **Text Entry**
+so students can include the share link, output, and three written responses
+together, as specified in the Unit 1 handoff above.
+
+For assignments whose instructions request a URL alone, choose **Online** →
 **Website URL**. Students paste the copied link into that field and
 submit normally. To grade, open the submitted URL from SpeedGrader — it
 reopens the exact code the student had when they copied the link.

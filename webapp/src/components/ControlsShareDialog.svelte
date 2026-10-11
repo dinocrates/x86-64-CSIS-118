@@ -26,7 +26,7 @@
     urilen = uri.length
 
     //analytics
-    if(window.hasOwnProperty("goatcounter")){
+    if(typeof window.goatcounter?.count === 'function'){
       window.goatcounter.count({
           path:  function(p) { return 'click-share-' + p },
           event: true,

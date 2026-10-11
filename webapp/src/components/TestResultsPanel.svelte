@@ -25,11 +25,14 @@
         type="button"
         class="results__close"
         aria-label="Close Check My Work results"
+        disabled={$checkRun.status === 'running'}
         on:click={dismissCheckResults}
       >✕</button>
     </header>
 
-    {#if $checkRun.status === 'running'}
+    {#if $checkRun.stale}
+      <p role="status">Your code or assignment changed. Run Check My Work again for current results{#if $checkRun.status === 'running'} after the previous run finishes{/if}.</p>
+    {:else if $checkRun.status === 'running'}
       <p class="results__running" role="status">
         <span class="results__spinner" aria-hidden="true"></span>
         {$checkRun.progressLabel || 'Running checks…'}
@@ -98,6 +101,10 @@
             Download Test Report
           </button>
         </div>
+      {/if}
+      {#if report.reminders?.length}
+        <p><strong>Program checks and submission preparation are separate.</strong> Personalization still needed:</p>
+        <ul>{#each report.reminders as reminder}<li>{reminder}</li>{/each}</ul>
       {/if}
       <p class="results__note">{MESSAGES.checkMyWorkNote}</p>
     {/if}

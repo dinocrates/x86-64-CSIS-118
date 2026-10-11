@@ -2,6 +2,7 @@
   import { assignments } from '../assignments/assignments';
   import {
     assignmentId,
+    editorContent_read,
     blinkStore,
     selectedAssignment,
     urlAssignmentNotFound,
@@ -9,6 +10,11 @@
   import { dismissCheckResults } from '../testing/reportStore';
   import CheckMyWorkButton from './CheckMyWorkButton.svelte';
   import CopySubmissionLinkButton from './CopySubmissionLinkButton.svelte';
+  import AssignmentInstructions from './AssignmentInstructions.svelte';
+  import { personalizationReminders } from '../testing/personalization';
+
+  $: reminders = $selectedAssignment
+    ? personalizationReminders($editorContent_read, $selectedAssignment) : [];
 
   function handleSelect(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
@@ -58,6 +64,9 @@
 
   {#if $selectedAssignment}
     <p class="assignment__description">{$selectedAssignment.description}</p>
+    {#key $selectedAssignment.id}
+      <AssignmentInstructions assignment={$selectedAssignment} />
+    {/key}
     <div class="assignment__row assignment__actions">
       <CheckMyWorkButton />
       <CopySubmissionLinkButton />
@@ -70,9 +79,21 @@
       </button>
     </div>
     <p class="assignment__submitnote">
-      When you're finished, click <strong>Copy Submission Link</strong> and
-      paste it into Canvas.
+      {#if $selectedAssignment.instructions}
+        Submit your tested share link, two output lines, and three written responses in Canvas Text Entry.
+      {:else}
+        When you're finished, click <strong>Copy Submission Link</strong> and paste it into Canvas.
+      {/if}
     </p>
+    {#if $selectedAssignment.personalizationReminders}
+      <details class="assignment__preparation" open={reminders.length > 0}>
+        <summary>{reminders.length ? 'Personalization still needed' : 'Before you submit'}</summary>
+        {#if reminders.length}
+          <ul>{#each reminders as reminder}<li>{reminder}</li>{/each}</ul>
+        {/if}
+        <p>A program can pass execution checks while still needing personalization. Review your comments, debugger observation, and the manual completion checklist before submitting.</p>
+      </details>
+    {/if}
   {/if}
 </div>
 
@@ -123,6 +144,10 @@
     font-size: 0.75rem;
     color: var(--color-gray-200);
   }
+  .assignment__preparation { font-size: 0.75rem; line-height: 1.4; }
+  .assignment__preparation summary { cursor: pointer; }
+  .assignment__preparation ul { margin: 0.3rem 0; padding-left: 1.2rem; }
+  .assignment__preparation p { margin: 0.3rem 0; }
   .assignment__warning {
     margin: 0;
     padding: 0.3rem 0.6rem;

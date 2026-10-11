@@ -20,7 +20,26 @@ export type StdoutCompareMode = "exact" | "trimmed" | "normalized";
  * not program output, so the test runner strips it from captured stdout.
  */
 export function stripTerminalPrompt(text: string): string {
-	return text.replace(/^\s*\$ \/program[^\n]*\n/, "");
+	return text.replace(/^\r?\n\$ \/program[^\n]*\n/, "");
+}
+
+/** Preserve message content; normalize CRLF and at most one final newline. */
+export function checkMessageLines(
+	stdout: string,
+	contract: { count: number; identifyingPrefix: string },
+): string | null {
+	const lines = stdout.replace(/\r\n/g, "\n").replace(/\n$/, "").split("\n");
+	if (lines.length !== contract.count || lines.some((line) => !line.trim())) {
+		return `Print exactly ${contract.count} nonempty message lines: your greeting, then your identifying message. Received ${lines.length} line(s).`;
+	}
+	const identifyingLine = lines[lines.length - 1];
+	if (!identifyingLine.startsWith(contract.identifyingPrefix)) {
+		return `Start the second message with “${contract.identifyingPrefix}”, followed by your name.`;
+	}
+	if (!identifyingLine.slice(contract.identifyingPrefix.length).trim()) {
+		return `Add your name after “${contract.identifyingPrefix}” in the second message.`;
+	}
+	return null;
 }
 
 export function normalizeStdout(text: string): string {

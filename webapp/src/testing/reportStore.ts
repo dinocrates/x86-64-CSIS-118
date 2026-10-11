@@ -15,6 +15,7 @@ export interface CheckRunState {
 	report: AssignmentTestReport | null;
 	error: string | null;
 	progressLabel: string;
+	stale: boolean;
 }
 
 const idleState: CheckRunState = {
@@ -23,9 +24,23 @@ const idleState: CheckRunState = {
 	report: null,
 	error: null,
 	progressLabel: "",
+	stale: false,
 };
 
 export const checkRun = writable<CheckRunState>(idleState);
+
+// Version the source AND context so editing and then undoing, or switching
+// away and back during a run, cannot revive an obsolete success.
+let revision = 0;
+let previous = blinkStore.getAppState();
+blinkStore.subscribe(() => {
+	const current = blinkStore.getAppState();
+	if (current.editorContent !== previous.editorContent || current.assignmentId !== previous.assignmentId) {
+		revision++;
+		checkRun.update((s) => s.status === "idle" ? s : { ...s, stale: true, report: null });
+	}
+	previous = current;
+});
 
 /** Run the selected assignment's checks against the current editor code. */
 export async function startCheckMyWork(): Promise<void> {
@@ -33,6 +48,7 @@ export async function startCheckMyWork(): Promise<void> {
 	const assignment = get(selectedAssignment);
 	if (!assignment) return;
 	const source = blinkStore.getAppState().editorContent;
+	const startedRevision = revision;
 
 	checkRun.set({
 		status: "running",
@@ -40,6 +56,7 @@ export async function startCheckMyWork(): Promise<void> {
 		report: null,
 		error: null,
 		progressLabel: "Preparing checks…",
+		stale: false,
 	});
 	try {
 		const report = await runAssignmentTests(source, assignment, (label) => {
@@ -48,9 +65,10 @@ export async function startCheckMyWork(): Promise<void> {
 		checkRun.set({
 			status: "done",
 			forAssignmentId: assignment.id,
-			report,
+			report: revision === startedRevision ? report : null,
 			error: null,
 			progressLabel: "",
+			stale: revision !== startedRevision,
 		});
 	} catch (error) {
 		console.error("Check My Work failed:", error);
@@ -62,10 +80,14 @@ export async function startCheckMyWork(): Promise<void> {
 				"Something went wrong while running the checks. Reload the page " +
 				"and try again — your code is unaffected.",
 			progressLabel: "",
+			stale: revision !== startedRevision,
 		});
 	}
 }
 
 export function dismissCheckResults(): void {
+	// Keep the run lock until the isolated emulator finishes, even if the
+	// student switches assignments. Never run two programs in it at once.
+	if (get(checkRun).status === "running") return;
 	checkRun.set(idleState);
 }

@@ -82,12 +82,15 @@ export function formatTestReport(report: AssignmentTestReport): string {
 			}
 		}
 	}
+	if (report.reminders?.length) {
+		lines.push("", "Personalization reminders (not execution checks):", ...report.reminders);
+	}
 	lines.push(
 		"",
 		"----",
 		"Check My Work runs practice tests in your browser. Passing these",
 		"tests does not guarantee full credit. Submit your work in Canvas",
-		"(Copy Submission Link, or the downloaded .asm file) when finished.",
+		"following the assignment's submission checklist when finished.",
 		"",
 	);
 	return lines.join("\n");

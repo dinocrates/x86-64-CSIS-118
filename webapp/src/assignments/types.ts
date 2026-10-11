@@ -15,6 +15,18 @@ export interface AssignmentConfig {
 	description: string;
 	starterCode: string;
 	tests: AssignmentTest[];
+	instructions?: AssignmentInstructions;
+	/** Advisory source reminders only; never execution checks or grades. */
+	personalizationReminders?: { pattern: string; message: string }[];
+}
+
+export interface AssignmentInstructions {
+	points: number;
+	objectives: string[];
+	steps: { title: string; items: string[] }[];
+	submission: string[];
+	rubric: { criterion: string; points: number; description: string }[];
+	completionChecklist: string[];
 }
 
 /** The x86-64 general purpose registers a test can set up or inspect. */
@@ -83,8 +95,11 @@ export interface StdoutTest extends BaseTest {
 	 * student typed each line into the terminal input box.
 	 */
 	stdin?: string;
-	expectedStdout: string;
+	expectedStdout?: string;
 	compareMode?: "exact" | "trimmed" | "normalized";
+	/** Alternative to a fixed output string, for personalized full programs. */
+	messageLines?: { count: number; identifyingPrefix: string };
+	expectedExitCode?: number;
 }
 
 /**

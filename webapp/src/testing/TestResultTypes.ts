@@ -37,6 +37,8 @@ export interface AssignmentTestReport {
 	timestamp: string;
 	/** sha256 of the exact source that was checked, when available. */
 	sourceSha256?: string;
+	/** Advisory personalization reminders, separate from test counts/points. */
+	reminders?: string[];
 }
 
 /** Standard student-facing wording, used consistently across the UI. */
