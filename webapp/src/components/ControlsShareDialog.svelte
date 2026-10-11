@@ -1,10 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { createDialog, melt } from '@melt-ui/svelte'
+  import { createDialog } from '@melt-ui/svelte'
   import Close from './icons/Close.svelte';
   import Clipboard from './icons/Clipboard.svelte';
   import { copyTextToClipboard } from '../core/utils';
-  import {blinkStore, selectedAssignment} from '../core/store'
+  import {editorContent_read, selectedAssignment} from '../core/store'
   import {
     buildShareLink,
     SHARE_LINK_DANGEROUS_LEN,
@@ -16,7 +15,6 @@
     states: { open }
   } = createDialog()
 
-  let inputDomnode:any;
   let uri:string = "";
   let urilen = 0;
   let dangerouslen = SHARE_LINK_DANGEROUS_LEN;
@@ -36,6 +34,19 @@
 
   function handleCopyClick(){
     copyTextToClipboard(uri)
+  }
+
+  let copyingCode = false;
+  let codeCopyStatus: 'idle' | 'copied' | 'failed' = 'idle';
+  $: if (!$open) codeCopyStatus = 'idle';
+
+  async function handleCopyCode() {
+    if (copyingCode) return;
+    copyingCode = true;
+    codeCopyStatus = 'idle';
+    const copied = await copyTextToClipboard($editorContent_read);
+    copyingCode = false;
+    if ($open) codeCopyStatus = copied ? 'copied' : 'failed';
   }
 
 </script>
@@ -96,6 +107,25 @@
           </p>
         {/if}
       {/if}
+      <div class="copy-code">
+        <button
+          type="button"
+          class="button button--secondary"
+          aria-disabled={copyingCode}
+          aria-busy={copyingCode}
+          on:click={handleCopyCode}
+        >
+          <Clipboard width="18px" height="18px" aria-hidden="true" focusable="false" />
+          {copyingCode ? 'Copying code…' : 'Copy Code'}
+        </button>
+        <p class="copy-code__status" class:failed={codeCopyStatus === 'failed'} role="status">
+          {#if codeCopyStatus === 'copied'}
+            Code copied to clipboard.
+          {:else if codeCopyStatus === 'failed'}
+            Could not copy code. Close Share, select your code in the editor, and copy it manually.
+          {/if}
+        </p>
+      </div>
       <button {...$close} use:close> 
         <Close
           style="fill:var(--theme-primary);"
@@ -122,4 +152,8 @@ input:focus{
 .m-top-1{
   margin-top: 1rem;
 }
+.copy-code { margin-top: 1rem; }
+.copy-code__status { margin: 0.3rem 0 0; font-size: 0.8rem; color: var(--color-green); }
+.copy-code__status:empty { display: none; }
+.copy-code__status.failed { color: var(--color-gold-50); }
 </style>

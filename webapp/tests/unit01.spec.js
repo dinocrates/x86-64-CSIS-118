@@ -5,6 +5,9 @@ const id = 'unit01-hello-assembly';
 const launch = `index.html?assignment=${id}`;
 const editor = (page) => page.locator('.prism-code-editor textarea');
 const results = (page) => page.getByRole('region', { name: 'Check My Work results' });
+// Windows stores native clipboard line breaks as CRLF. Compare the source's
+// line structure while still checking every tab, space, and Unicode character.
+const clipboardNewlines = (text) => text.replace(/\r\n/g, '\n');
 const personalize = (source, name = 'Alex Rivera') => source
   .replaceAll('Your Name', name).replace('YYYY-MM-DD', '2026-10-11')
   .replace('Hello, Assembly!', 'Ready to learn assembly!')
@@ -31,6 +34,78 @@ async function report(page, source) {
 
 test.beforeEach(async ({ context }) => {
   await context.route('**/analytics.halb.it/**', (route) => route.fulfill({ body: '' }));
+});
+
+test('Copy Code below the share link copies exact current source in every theme and free practice', async ({ page, context }, testInfo) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page);
+  const source = '; café / 李 / tabs and blank lines\n\n\tmov rbx, 42  \n\n';
+  await editor(page).fill(source);
+  for (const theme of ['dark', 'light', 'high-contrast']) {
+    await page.getByRole('combobox', { name: 'Color theme' }).selectOption(theme);
+    await page.getByRole('button', { name: 'Share', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Share', exact: true });
+    const copyCode = dialog.getByRole('button', { name: 'Copy Code', exact: true });
+    const linkBox = await dialog.locator('input[readonly]').boundingBox();
+    const codeBox = await copyCode.boundingBox();
+    expect(codeBox.y).toBeGreaterThan(linkBox.y + linkBox.height);
+    await copyCode.click();
+    await expect(dialog.getByRole('status')).toHaveText('Code copied to clipboard.');
+    expect(clipboardNewlines(await page.evaluate(() => navigator.clipboard.readText()))).toBe(source);
+    await page.screenshot({ path: testInfo.outputPath(`copy-code-${theme}.png`) });
+    await page.keyboard.press('Escape');
+    await expect(editor(page)).toHaveValue(source);
+  }
+  await page.locator('#assignment-select').selectOption('');
+  await editor(page).fill('; Different free practice source\n');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Share', exact: true });
+  await expect(dialog.locator('.copy-code__status')).toBeEmpty();
+  await dialog.getByRole('button', { name: 'Copy Code', exact: true }).click();
+  await expect(dialog.getByRole('status')).toHaveText('Code copied to clipboard.');
+  expect(clipboardNewlines(await page.evaluate(() => navigator.clipboard.readText()))).toBe('; Different free practice source\n');
+  await page.screenshot({ path: testInfo.outputPath('copy-code-mobile.png') });
+});
+
+test('Copy Code uses the legacy clipboard fallback inside the Share dialog and restores focus', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page);
+  const source = await editor(page).inputValue();
+  await page.evaluate(() => {
+    window.readTestClipboard = navigator.clipboard.readText.bind(navigator.clipboard);
+    Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });
+  });
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Share', exact: true });
+  const copyCode = dialog.getByRole('button', { name: 'Copy Code', exact: true });
+  await copyCode.click();
+  await expect(dialog.getByRole('status')).toHaveText('Code copied to clipboard.');
+  expect(clipboardNewlines(await page.evaluate(() => window.readTestClipboard()))).toBe(source);
+  await expect(copyCode).toBeFocused();
+  await expect(dialog.locator('textarea')).toHaveCount(0);
+});
+
+test('Copy Code reports clipboard denial honestly and allows a successful retry', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await open(page);
+  const source = await editor(page).inputValue();
+  await page.evaluate(() => {
+    window.writeTestClipboard = navigator.clipboard.writeText.bind(navigator.clipboard);
+    navigator.clipboard.writeText = async () => { throw new DOMException('Clipboard blocked', 'NotAllowedError'); };
+    document.execCommand = () => false;
+  });
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Share', exact: true });
+  const copyCode = dialog.getByRole('button', { name: 'Copy Code', exact: true });
+  await copyCode.click();
+  await expect(dialog.getByRole('status')).toContainText('Could not copy code.');
+  await expect(dialog.getByText('Code copied to clipboard.', { exact: true })).toHaveCount(0);
+  await expect(copyCode).toBeEnabled();
+  await page.evaluate(() => { navigator.clipboard.writeText = window.writeTestClipboard; });
+  await copyCode.click();
+  await expect(dialog.getByRole('status')).toHaveText('Code copied to clipboard.');
+  expect(clipboardNewlines(await page.evaluate(() => navigator.clipboard.readText()))).toBe(source);
 });
 
 test('video display controls preserve code and results, persist on refresh, and work on mobile', async ({ page }, testInfo) => {

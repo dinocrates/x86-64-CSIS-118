@@ -37,6 +37,13 @@ test('built Pages app loads its assets and runs Unit 1 at the repository subpath
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
   const source = await page.locator('.prism-code-editor textarea').inputValue();
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.getByRole('button', { name: 'Share', exact: true }).click();
+  const share = page.getByRole('dialog', { name: 'Share', exact: true });
+  await share.getByRole('button', { name: 'Copy Code', exact: true }).click();
+  await expect(share.getByRole('status')).toHaveText('Code copied to clipboard.');
+  expect((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, '\n')).toBe(source);
+  await page.keyboard.press('Escape');
   await page.getByRole('combobox', { name: 'Editor text size', exact: true }).selectOption('28');
   await expect(page.locator('.prism-code-editor textarea')).toHaveCSS('font-size', '28px');
   await expect(page.locator('.prism-code-editor textarea')).toHaveValue(source);

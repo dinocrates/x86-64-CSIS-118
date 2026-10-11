@@ -52,6 +52,9 @@ The **Theme** menu offers **Dark** (the original appearance and default),
 **Light**, and **High Contrast**. It applies to the editor, debugger, terminal,
 menus, and instructions. The theme is also saved only in this browser.
 
+Open **Share** and choose **Copy Code** below the share link to copy the full
+current editor source, including its spacing and line breaks, as plain text.
+
 ### Canvas handoff
 
 Use **Canvas Text Entry**, worth **30 points**. Replace the existing directions

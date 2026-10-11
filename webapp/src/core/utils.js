@@ -15,6 +15,7 @@ export async function fetchBinaryFile(url) {
 
 
 function fallbackCopyTextToClipboard(text) {
+  const previousFocus = document.activeElement;
   var textArea = document.createElement("textarea");
   textArea.value = text;
   
@@ -23,7 +24,9 @@ function fallbackCopyTextToClipboard(text) {
   textArea.style.left = "0";
   textArea.style.position = "fixed";
 
-  document.body.appendChild(textArea);
+  // Keep the fallback inside an open dialog's focus trap.
+  const container = previousFocus?.closest('[data-melt-dialog-content]') ?? document.body;
+  container.appendChild(textArea);
   textArea.focus();
   textArea.select();
 
@@ -31,20 +34,24 @@ function fallbackCopyTextToClipboard(text) {
     var successful = document.execCommand('copy');
     var msg = successful ? 'successful' : 'unsuccessful';
     console.log('Fallback: Copying text command was ' + msg);
+    return successful;
   } catch (err) {
     console.error('Fallback: Oops, unable to copy', err);
+    return false;
+  } finally {
+    textArea.remove();
+    if (previousFocus instanceof HTMLElement) previousFocus.focus({ preventScroll: true });
   }
-
-  document.body.removeChild(textArea);
 }
-export function copyTextToClipboard(text) {
+export async function copyTextToClipboard(text) {
   if (!navigator.clipboard) {
-    fallbackCopyTextToClipboard(text);
-    return;
+    return fallbackCopyTextToClipboard(text);
   }
-  navigator.clipboard.writeText(text).then(function() {
+  try {
+    await navigator.clipboard.writeText(text);
     console.log('Async: Copying to clipboard was successful!');
-  }, function(err) {
-    console.error('Async: Could not copy text: ', err);
-  });
+    return true;
+  } catch {
+    return fallbackCopyTextToClipboard(text);
+  }
 }
