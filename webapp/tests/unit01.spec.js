@@ -33,6 +33,80 @@ test.beforeEach(async ({ context }) => {
   await context.route('**/analytics.halb.it/**', (route) => route.fulfill({ body: '' }));
 });
 
+test('video display controls preserve code and results, persist on refresh, and work on mobile', async ({ page }, testInfo) => {
+  await open(page);
+  const source = await editor(page).inputValue();
+  const size = page.getByRole('combobox', { name: 'Editor text size', exact: true });
+  await expect(size).toHaveValue('16');
+  await editor(page).press('Control+End');
+  await page.keyboard.insertText('; video note');
+  const selection = await editor(page).evaluate((el) => [el.selectionStart, el.selectionEnd]);
+  await size.selectOption('24');
+  await expect(editor(page)).toHaveCSS('font-size', '24px');
+  await expect(page.locator('.pce-line').first()).toHaveCSS('font-size', '24px');
+  await expect(editor(page)).toHaveValue(source + '; video note');
+  expect(await editor(page).evaluate((el) => [el.selectionStart, el.selectionEnd])).toEqual(selection);
+  await editor(page).press('Control+z');
+  await expect(editor(page)).toHaveValue(source);
+  await page.getByRole('button', { name: 'Increase editor text size' }).click();
+  await expect(size).toHaveValue('26');
+  await page.getByRole('button', { name: 'Decrease editor text size' }).click();
+  await expect(size).toHaveValue('24');
+  await size.selectOption('12');
+  await expect(page.getByRole('button', { name: 'Decrease editor text size' })).toBeDisabled();
+  await size.selectOption('40');
+  await expect(page.getByRole('button', { name: 'Increase editor text size' })).toBeDisabled();
+  await size.selectOption('24');
+
+  await page.getByRole('button', { name: 'Check My Work', exact: true }).click();
+  await expect(results(page)).toBeVisible();
+  const editorViewport = page.locator('.pane__content').first();
+  const editorHeight = await editorViewport.evaluate((el) => el.getBoundingClientRect().height);
+  await page.getByRole('button', { name: 'Hide assignment details' }).click();
+  const showDetails = page.getByRole('button', { name: 'Show assignment details' });
+  await expect(showDetails).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#assignment-select')).toBeVisible();
+  await expect(page.locator('#assignment-details')).toBeHidden();
+  await expect(page.locator('#assignment-results')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Check My Work', exact: true })).toHaveCount(0);
+  expect(await editorViewport.evaluate((el) => el.getBoundingClientRect().height)).toBeGreaterThan(editorHeight);
+  await expect(page.locator('#assignment-results')).toContainText('2 / 2');
+  await page.screenshot({ path: testInfo.outputPath('video-display-desktop.png') });
+  await showDetails.click();
+  await expect(results(page)).toContainText('2 / 2');
+  await expect(page.getByRole('button', { name: 'Hide assignment details' })).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('button', { name: 'Hide assignment details' }).click();
+  await page.reload();
+  await expect(showDetails).toBeVisible();
+  await expect(size).toHaveValue('24');
+  await expect(editor(page)).toHaveValue(source);
+  await expect(editor(page)).toHaveCSS('font-size', '24px');
+
+  await page.locator('#assignment-select').selectOption('');
+  await expect(showDetails).toBeVisible();
+  await page.locator('#assignment-select').selectOption(id);
+  await expect(editor(page)).toHaveValue(source);
+  await expect(page.locator('#assignment-details')).toBeHidden();
+  await page.setViewportSize({ width: 500, height: 1000 });
+  await expect(showDetails).toBeVisible();
+  await expect(size).toHaveValue('24');
+  await expect(editor(page)).toHaveCSS('font-size', '24px');
+  await page.screenshot({ path: testInfo.outputPath('video-display-mobile.png') });
+  await showDetails.click();
+  await expect(page.getByRole('button', { name: 'Check My Work', exact: true })).toBeVisible();
+});
+
+test('invalid saved display preferences fall back to usable defaults', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('csis118b.display.assignmentDetailsCollapsed', '"false"');
+    localStorage.setItem('csis118b.display.editorFontSize', '10000');
+  });
+  await open(page);
+  await expect(page.getByRole('button', { name: 'Hide assignment details' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Editor text size', exact: true })).toHaveValue('16');
+  await expect(editor(page)).toHaveCSS('font-size', '16px');
+});
+
 test('starter launches, compiles, and runs; personalization and instructor rubric remain visible', async ({ page }) => {
   await open(page);
   await expect(page.locator(`#assignment-select option[value="${id}"]`)).toHaveCount(1);

@@ -40,6 +40,14 @@ assignment ID take precedence over a conflicting `assignment` query parameter
 and autosave. Legacy V1 shares keep their source and open in free practice.
 The gzip/base64url format and version are unchanged.
 
+### Recording videos
+
+For recording videos, use the arrow beside the **Assignment** selector to hide
+or show everything below it, including Check My Work results. The **A− / A+**
+controls beside Compile and File options change only the code editor text size;
+the size menu offers 12–40 px. Both display preferences are remembered in this
+browser and do not change source code, saved assignments, or submission links.
+
 ### Canvas handoff
 
 Use **Canvas Text Entry**, worth **30 points**. Replace the existing directions

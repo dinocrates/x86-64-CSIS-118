@@ -32,6 +32,15 @@ test('built Pages app loads its assets and runs Unit 1 at the repository subpath
   await expect(dialog.getByRole('region', { name: 'Assignment instructions' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
+  const source = await page.locator('.prism-code-editor textarea').inputValue();
+  await page.getByRole('combobox', { name: 'Editor text size', exact: true }).selectOption('28');
+  await expect(page.locator('.prism-code-editor textarea')).toHaveCSS('font-size', '28px');
+  await expect(page.locator('.prism-code-editor textarea')).toHaveValue(source);
+  await page.getByRole('button', { name: 'Hide assignment details' }).click();
+  await expect(page.locator('#assignment-select')).toBeVisible();
+  await expect(page.locator('#assignment-results')).toBeHidden();
+  await page.getByRole('button', { name: 'Show assignment details' }).click();
+  await expect(page.getByRole('region', { name: 'Check My Work results' })).toContainText('2 / 2');
   expect(loadedAssets.some((url) => url.endsWith('.wasm'))).toBe(true);
   expect(loadedAssets.filter((url) => url.endsWith('.elf')).length).toBeGreaterThanOrEqual(2);
   expect(loadedAssets.every((url) => new URL(url).pathname.startsWith('/x86-64-CSIS-118/assets/'))).toBe(true);

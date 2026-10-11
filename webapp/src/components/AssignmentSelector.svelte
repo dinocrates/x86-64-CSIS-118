@@ -12,6 +12,7 @@
   import CopySubmissionLinkButton from './CopySubmissionLinkButton.svelte';
   import AssignmentInstructions from './AssignmentInstructions.svelte';
   import { personalizationReminders } from '../testing/personalization';
+  import { assignmentDetailsCollapsed } from '../core/displayPreferences';
 
   $: reminders = $selectedAssignment
     ? personalizationReminders($editorContent_read, $selectedAssignment) : [];
@@ -36,17 +37,6 @@
 </script>
 
 <div class="assignment">
-  {#if $urlAssignmentNotFound}
-    <p class="assignment__warning" role="status">
-      The requested assignment could not be found. The playground opened normally.
-      <button
-        type="button"
-        class="assignment__dismiss"
-        on:click={() => urlAssignmentNotFound.set(false)}
-      >Dismiss</button>
-    </p>
-  {/if}
-
   <div class="assignment__row">
     <label class="assignment__label" for="assignment-select">Assignment</label>
     <select
@@ -60,41 +50,71 @@
         <option value={assignment.id}>{assignment.title}</option>
       {/each}
     </select>
+    <button
+      type="button"
+      class="assignment__toggle"
+      aria-label={$assignmentDetailsCollapsed ? 'Show assignment details' : 'Hide assignment details'}
+      title={$assignmentDetailsCollapsed ? 'Show assignment details' : 'Hide assignment details'}
+      aria-expanded={!$assignmentDetailsCollapsed}
+      aria-controls="assignment-details assignment-results"
+      on:click={() => assignmentDetailsCollapsed.update((collapsed) => !collapsed)}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+        <path d={$assignmentDetailsCollapsed ? 'M4 6 L8 10 L12 6' : 'M4 10 L8 6 L12 10'} />
+      </svg>
+    </button>
   </div>
 
-  {#if $selectedAssignment}
-    <p class="assignment__description">{$selectedAssignment.description}</p>
-    {#key $selectedAssignment.id}
-      <AssignmentInstructions assignment={$selectedAssignment} />
-    {/key}
-    <div class="assignment__row assignment__actions">
-      <CheckMyWorkButton />
-      <CopySubmissionLinkButton />
-      <button
-        type="button"
-        class="button button--secondary"
-        on:click={handleReset}
-      >
-        Reset to Starter Code
-      </button>
-    </div>
-    <p class="assignment__submitnote">
-      {#if $selectedAssignment.instructions}
-        Submit your tested share link, two output lines, and three written responses in Canvas Text Entry.
-      {:else}
-        When you're finished, click <strong>Copy Submission Link</strong> and paste it into Canvas.
-      {/if}
-    </p>
-    {#if $selectedAssignment.personalizationReminders}
-      <details class="assignment__preparation" open={reminders.length > 0}>
-        <summary>{reminders.length ? 'Personalization still needed' : 'Before you submit'}</summary>
-        {#if reminders.length}
-          <ul>{#each reminders as reminder}<li>{reminder}</li>{/each}</ul>
-        {/if}
-        <p>A program can pass execution checks while still needing personalization. Review your comments, debugger observation, and the manual completion checklist before submitting.</p>
-      </details>
+  <div
+    id="assignment-details"
+    class="assignment__details"
+    hidden={$assignmentDetailsCollapsed || (!$selectedAssignment && !$urlAssignmentNotFound)}
+  >
+    {#if $urlAssignmentNotFound}
+      <p class="assignment__warning" role="status">
+        The requested assignment could not be found. The playground opened normally.
+        <button
+          type="button"
+          class="assignment__dismiss"
+          on:click={() => urlAssignmentNotFound.set(false)}
+        >Dismiss</button>
+      </p>
     {/if}
-  {/if}
+
+    {#if $selectedAssignment}
+      <p class="assignment__description">{$selectedAssignment.description}</p>
+      {#key $selectedAssignment.id}
+        <AssignmentInstructions assignment={$selectedAssignment} />
+      {/key}
+      <div class="assignment__row assignment__actions">
+        <CheckMyWorkButton />
+        <CopySubmissionLinkButton />
+        <button
+          type="button"
+          class="button button--secondary"
+          on:click={handleReset}
+        >
+          Reset to Starter Code
+        </button>
+      </div>
+      <p class="assignment__submitnote">
+        {#if $selectedAssignment.instructions}
+          Submit your tested share link, two output lines, and three written responses in Canvas Text Entry.
+        {:else}
+          When you're finished, click <strong>Copy Submission Link</strong> and paste it into Canvas.
+        {/if}
+      </p>
+      {#if $selectedAssignment.personalizationReminders}
+        <details class="assignment__preparation" open={reminders.length > 0}>
+          <summary>{reminders.length ? 'Personalization still needed' : 'Before you submit'}</summary>
+          {#if reminders.length}
+            <ul>{#each reminders as reminder}<li>{reminder}</li>{/each}</ul>
+          {/if}
+          <p>A program can pass execution checks while still needing personalization. Review your comments, debugger observation, and the manual completion checklist before submitting.</p>
+        </details>
+      {/if}
+    {/if}
+  </div>
 </div>
 
 <style>
@@ -118,9 +138,25 @@
     color: var(--color-gray-150);
     flex-shrink: 0;
   }
+  .assignment__details { display: flex; flex-direction: column; gap: 0.4rem; }
+  .assignment__details[hidden] { display: none; }
+  .assignment__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-gray-t);
+    border-radius: 4px;
+    background: var(--theme-bg);
+    color: var(--color-gray-100);
+    cursor: pointer;
+  }
+  .assignment__toggle:hover { background: var(--color-gray-400); color: white; }
+  .assignment__toggle svg { fill: none; stroke: currentColor; stroke-width: 2; }
   .assignment__select {
     flex: 1;
-    min-width: 12rem;
+    min-width: 0;
     height: 2rem;
     font-size: 0.9rem;
     color: white;

@@ -8,6 +8,8 @@ import ControlsFileMenu from "./ControlsFileMenu.svelte";
 import ControlsAboutDialog from "./ControlsAboutDialog.svelte";
 import AssignmentSelector from "./AssignmentSelector.svelte";
 import TestResultsPanel from "./TestResultsPanel.svelte";
+import EditorTextSize from "./EditorTextSize.svelte";
+import { assignmentDetailsCollapsed } from "../core/displayPreferences";
 import { blinkStore, state } from "../core/store";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
 
@@ -87,6 +89,7 @@ function handle_back() {
       {#if (showEditor || !mobile) && !$blinkStore.uploadedElf}
       <ControlsCompilebt cancompile={cancompile} />
       <ControlsFileMenu />
+      <EditorTextSize />
 
       {:else}
         <button on:click={handle_back} class="button" >
@@ -137,7 +140,9 @@ function handle_back() {
 
 {#if (showEditor || !mobile) && !$blinkStore.uploadedElf}
   <AssignmentSelector />
-  <TestResultsPanel />
+  <div id="assignment-results" hidden={$assignmentDetailsCollapsed}>
+    <TestResultsPanel />
+  </div>
 {/if}
 
 
@@ -206,6 +211,8 @@ function handle_back() {
   }
   .controls__row-top {
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
   :not(.controls-inverted) .controls__row-bottom {
     border-top: 1px solid var(--theme-panel-border);

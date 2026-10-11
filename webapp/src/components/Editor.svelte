@@ -1,6 +1,7 @@
 <script>
 import {blinkStore, state, editorContent_write, editorContent_read} from '../core/store'
 import {onMount} from 'svelte'
+import { editorFontSize } from '../core/displayPreferences'
 import { createEditor } from "prism-code-editor"
 
 // Prism grammars
@@ -133,6 +134,7 @@ onMount(() => {
     </div>
   {/if}
   <div class="editor" bind:this={editor_elem}
+    style:--editor-font-size={$editorFontSize + 'px'}
     class:hidden={$blinkStore.uploadedElf}> </div>
 </div>
 
@@ -142,6 +144,9 @@ onMount(() => {
   }
   .editor.hidden{
     display: none;
+  }
+  .editor :global(.prism-code-editor) {
+    font-size: var(--editor-font-size);
   }
   .container{
     overflow: auto;
