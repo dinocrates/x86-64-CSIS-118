@@ -152,14 +152,14 @@
     color: var(--color-gray-100);
     cursor: pointer;
   }
-  .assignment__toggle:hover { background: var(--color-gray-400); color: white; }
+  .assignment__toggle:hover { background: var(--color-gray-400); color: var(--color-gray-0); }
   .assignment__toggle svg { fill: none; stroke: currentColor; stroke-width: 2; }
   .assignment__select {
     flex: 1;
     min-width: 0;
     height: 2rem;
     font-size: 0.9rem;
-    color: white;
+    color: var(--color-gray-0);
     background-color: var(--theme-bg);
     border: 1px solid var(--color-gray-t);
     border-radius: 4px;

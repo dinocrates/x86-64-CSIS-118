@@ -1,5 +1,11 @@
 <script lang="ts">
 import './styles/style.css';
+import './styles/themes.css';
+import { themeMode } from './core/displayPreferences';
+
+// Apply the stored theme to the document so portalled menus and dialogs
+// inherit it too. Switching themes never recreates the editor or emulator.
+$: document.documentElement.dataset.theme = $themeMode;
 import DesktopLayout from './DesktopLayout.svelte';
 import MobileLayout from './MobileLayout.svelte';
 
@@ -129,7 +135,7 @@ async function handleDrop(e){
   margin: 2rem;
   background-color: var(--color-violet-100);
   border-radius: 10px;
-  outline: 2px dashed rgba(255,255,255,.4);
+  outline: 2px dashed var(--theme-drag-border);
   outline-offset: -10px;
   display: flex;
   flex-direction:column;

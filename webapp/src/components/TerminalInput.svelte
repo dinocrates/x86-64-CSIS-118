@@ -49,10 +49,7 @@ function lineEnter(e){
     flex-direction: column;
     width: 100%;
     font-family: var(--code-font-family);
-    background-color: #6ab0f3;
-    background-color: #6ab0f35c;
-    background-color: #33486c;
-    background-color: #3e4c64;
+    background-color: var(--theme-stdin-bg);
     border: 1px solid var(--color-blue);
     color: var(--theme-exitcodeinfo-fg);
     padding-left: 1rem;
@@ -73,7 +70,7 @@ function lineEnter(e){
     height: 2rem;
     border-radius: 4px 0px 0px 4px;
     padding-left: 6px;
-    border: 1px solid white;
+    border: 1px solid var(--color-gray-0);
 }
 .stdin input:focus-visible{
     outline: 3px solid var(--theme-focus);
@@ -93,9 +90,9 @@ label {
     padding-right: 1rem;
     font-size: 14px;
 
-  background-color: #daaa62;
-  color: #171515;
-  border: 1px solid rgb(0, 0, 0);
+  background-color: var(--theme-warning-bg);
+  color: var(--theme-warning-fg);
+  border: 1px solid var(--theme-warning-border);
 
   }
 </style>

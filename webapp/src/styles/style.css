@@ -131,6 +131,27 @@
     /* --theme-exitcodeinfo-bg: rgb(72, 46, 40); */
 
     --theme-exitcodeinfo-border: rgb(245, 127, 97);
+
+    /* Defaults preserve the existing dark appearance. */
+    --theme-editor-bg: #0d1117;
+    --theme-editor-error-bg: rgb(52, 30, 24);
+    --theme-editor-error-fg: #ff7b72;
+    --theme-dis-exit-bg: rgb(72, 46, 40);
+    --theme-dis-red: #ffa657;
+    --theme-dis-brown: #ff7b72;
+    --theme-dis-blue: #79c0ff;
+    --theme-active-border: rgba(255, 255, 255, 0.7);
+    --theme-selected-bg: rgba(255, 255, 255, 0.1);
+    --theme-brand-bg: var(--color-msjc-red);
+    --theme-brand-fg: #eee;
+    --theme-readline-bg: #33485c;
+    --theme-stdin-bg: #3e4c64;
+    --theme-warning-bg: #daaa62;
+    --theme-warning-fg: #171515;
+    --theme-warning-border: black;
+    --theme-hint-bg: rgba(255, 212, 121, 0.08);
+    --theme-hint-border: rgba(255, 212, 121, 0.35);
+    --theme-drag-border: rgba(255, 255, 255, 0.4);
 }
 
 /*========================================*/
@@ -372,8 +393,7 @@ body {
 
 .disass.exit tr.current {
     border: 1px solid var(--theme-exitcodeinfo-border);
-    --theme-exitcodeinfo-bg: rgb(72, 46, 40);
-    background-color: var(--theme-exitcodeinfo-bg);
+    background-color: var(--theme-dis-exit-bg);
 }
 
 .disass td {
@@ -400,7 +420,7 @@ body {
 
 .disass .str {
     white-space: nowrap;
-    color: white;
+    color: var(--color-gray-0);
 }
 
 .disass .label {
@@ -408,17 +428,16 @@ body {
 }
 
 .disass span.red {
-    color: #ffa657;
+    color: var(--theme-dis-red);
     /* TODO: set proper colors.*/
 }
 
 .disass span.brown {
-    color: #ff7b72;
+    color: var(--theme-dis-brown);
 }
 
 .disass span.blue {
-    color: #a5d6ff;
-    color: #79c0ff;
+    color: var(--theme-dis-blue);
 }
 
 /** Editor panel errors
@@ -432,9 +451,8 @@ body {
     position: absolute;
     inset: 0;
     z-index: -2;
-    background-color: rgb(52, 30, 24);
-    color: rgb(245, 127, 97);
-    color: #ff7b72;
+    background-color: var(--theme-editor-error-bg);
+    color: var(--theme-editor-error-fg);
 }
 
 /**
@@ -446,7 +464,7 @@ body {
 .select,
 .btgroup__button {
     border: 1px solid var(--color-gray-t);
-    color: white;
+    color: var(--color-gray-0);
     padding: .2rem 0.6rem;
     border-radius: 4px;
     background-color: transparent;
@@ -464,7 +482,7 @@ body {
 
 .button:not(:disabled):active,
 .btgroup__button:not(:disabled):active {
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--theme-active-border);
 }
 
 .button--secondary {
@@ -505,7 +523,7 @@ body {
 }
 
 .btgroup .btgroup__button--select {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--theme-selected-bg);
     justify-content: space-between;
     padding-right: 0.0rem;
 }
@@ -523,14 +541,14 @@ body {
 
 .btgroup .btgroup__button:active:not(:disabled):nth-child(1) {
     /* I hereby challenge you to write a line with more selectors */
-    border-right: 1px solid rgba(255, 255, 255, 0.7);
+    border-right: 1px solid var(--theme-active-border);
 }
 
 .errorbox {
     /*TODO: remove hardcoded colors, find proper design */
-    background-color: rgb(96, 48, 36);
-    color: white;
-    border: 1px solid rgb(245, 127, 97);
+    background-color: var(--theme-exitcodeinfo-bg);
+    color: var(--theme-exitcodeinfo-fg);
+    border: 1px solid var(--theme-exitcodeinfo-border);
     margin: 0;
     padding-left: 1rem;
 }
@@ -738,11 +756,11 @@ body {
     background-color: transparent;
     cursor: pointer;
 
-    color: white;
+    color: var(--color-gray-0);
 }
 
 *[data-melt-dialog-close]:hover {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--color-gray-t);
 }
 
 *[data-melt-dialog-title] {
@@ -759,5 +777,5 @@ body {
 
     line-height: 1.5;
 
-    color: white;
+    color: var(--color-gray-0);
 }

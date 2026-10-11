@@ -28,3 +28,10 @@ export const editorFontSize = preference(
   'csis118b.display.editorFontSize', 16,
   (value) => typeof value === 'number' && editorFontSizes.includes(value),
 );
+
+export type ThemeMode = 'dark' | 'light' | 'high-contrast';
+
+export const themeMode = preference<ThemeMode>(
+  'csis118b.display.theme', 'dark',
+  (value) => value === 'dark' || value === 'light' || value === 'high-contrast',
+);

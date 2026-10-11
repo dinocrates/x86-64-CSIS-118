@@ -152,7 +152,7 @@ onMount(() => {
     overflow: auto;
     max-height: 100%;
     height: 100%;
-    background-color: #0d1117;
+    background-color: var(--theme-editor-bg);
     display: grid;
   }
   .files{
@@ -193,11 +193,9 @@ onMount(() => {
   }
 
  p.stopinfo{
-    /*TODO: remove hardcoded colors, find proper design */
-    background-color: rgb(224, 73, 35);
-    background-color: rgb(96, 48, 36);
-    color: white;
-    border: 1px solid rgb(245, 127, 97);
+    background-color: var(--theme-exitcodeinfo-bg);
+    color: var(--theme-exitcodeinfo-fg);
+    border: 1px solid var(--theme-exitcodeinfo-border);
 
     padding-left: 1rem;
     padding-right: 1rem;

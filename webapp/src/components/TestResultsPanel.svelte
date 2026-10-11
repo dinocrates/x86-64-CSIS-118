@@ -142,7 +142,7 @@
   }
   .results__close:hover {
     background-color: var(--color-gray-300);
-    color: white;
+    color: var(--color-gray-0);
   }
   .results__running {
     display: flex;
@@ -251,8 +251,8 @@
   .results__hint {
     margin: 0.5rem 0 0 0;
     padding: 0.35rem 0.5rem;
-    background-color: rgba(255, 212, 121, 0.08);
-    border: 1px solid rgba(255, 212, 121, 0.35);
+    background-color: var(--theme-hint-bg);
+    border: 1px solid var(--theme-hint-border);
     border-radius: 4px;
     color: var(--color-gold-50);
     white-space: pre-line;

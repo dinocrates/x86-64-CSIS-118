@@ -48,6 +48,10 @@ controls beside Compile and File options change only the code editor text size;
 the size menu offers 12–40 px. Both display preferences are remembered in this
 browser and do not change source code, saved assignments, or submission links.
 
+The **Theme** menu offers **Dark** (the original appearance and default),
+**Light**, and **High Contrast**. It applies to the editor, debugger, terminal,
+menus, and instructions. The theme is also saved only in this browser.
+
 ### Canvas handoff
 
 Use **Canvas Text Entry**, worth **30 points**. Replace the existing directions

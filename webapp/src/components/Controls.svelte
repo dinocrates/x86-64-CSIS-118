@@ -9,6 +9,7 @@ import ControlsAboutDialog from "./ControlsAboutDialog.svelte";
 import AssignmentSelector from "./AssignmentSelector.svelte";
 import TestResultsPanel from "./TestResultsPanel.svelte";
 import EditorTextSize from "./EditorTextSize.svelte";
+import ThemeSelector from "./ThemeSelector.svelte";
 import { assignmentDetailsCollapsed } from "../core/displayPreferences";
 import { blinkStore, state } from "../core/store";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
@@ -97,6 +98,8 @@ function handle_back() {
           Back to editor
         </button>
       {/if}
+
+      <ThemeSelector />
 
     </section>
   <!-- /Editor row -->
@@ -271,7 +274,7 @@ function handle_back() {
 
  .lineinputinfo{
     color: var(--theme-exitcodeinfo-fg);
-    background-color: #33485c;
+    background-color: var(--theme-readline-bg);
     border: 1px solid var(--color-blue);
     margin: 0;
     padding-left: 1rem;

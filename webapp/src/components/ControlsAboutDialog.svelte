@@ -429,6 +429,7 @@ call exit_program       ; exit with success</code></pre>
   position: absolute;
   right: 0.75rem;
   top: 0.75rem;
+  color: var(--theme-brand-close-fg, var(--color-white));
 }
 
 /* ─── Title bar ───────────────────────────────────────── */
@@ -437,8 +438,8 @@ call exit_program       ; exit with success</code></pre>
   padding: 1rem 3rem 1rem 1.5rem;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-gray-50);
-  background-color: var(--color-msjc-red);
+  color: var(--theme-brand-fg);
+  background-color: var(--theme-brand-bg);
   border-bottom: 2px solid rgba(0,0,0,0.3);
   flex-shrink: 0;
   letter-spacing: 0.02em;

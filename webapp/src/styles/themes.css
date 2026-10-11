@@ -1,0 +1,178 @@
+/* Dark remains the default palette in style.css and the existing editor theme. */
+:root[data-theme="light"] {
+    color-scheme: light;
+    --color-gray-0: #111827;
+    --color-gray-50: #111827;
+    --color-gray-100: #253041;
+    --color-gray-150: #39465b;
+    --color-gray-200: #4d5b70;
+    --color-gray-250: #657287;
+    --color-gray-300: #e0e5ee;
+    --color-gray-400: #f3f5f9;
+    --color-gray-500: #fff;
+    --color-gray-600: #edf1f7;
+    --color-gray-900: #111827;
+    --color-gray-t: #7c899b;
+    --color-gold-50: #745000;
+    --color-gold-100: #745000;
+    --color-yellow: #745000;
+    --color-green: #17673b;
+    --color-blue: #075a9c;
+    --color-orange: #9b3700;
+    --color-violet-100: #e9e1ff;
+    --color-plum-100: #ffe2ef;
+    --theme-focus: #005fcc;
+    --theme-hex-section-green: #def4e5;
+    --theme-hex-section-border: #657287;
+    --theme-dis-current-bg: #dce9ff;
+    --theme-dis-current-border: #005fcc;
+    --theme-exitcodeinfo-fg: #6e2113;
+    --theme-exitcodeinfo-bg: #fff0eb;
+    --theme-exitcodeinfo-border: #9b3700;
+    --theme-editor-bg: #fff;
+    --theme-editor-error-bg: #fff0eb;
+    --theme-editor-error-fg: #a12217;
+    --theme-dis-exit-bg: var(--theme-exitcodeinfo-bg);
+    --theme-dis-red: #8a3900;
+    --theme-dis-brown: #a12217;
+    --theme-dis-blue: #075a9c;
+    --theme-active-border: #253041;
+    --theme-selected-bg: #dce9ff;
+    --theme-brand-fg: #fff;
+    --theme-readline-bg: #e1efff;
+    --theme-stdin-bg: #e1efff;
+    --theme-warning-bg: #fff4d6;
+    --theme-warning-fg: #664500;
+    --theme-warning-border: #745000;
+    --theme-hint-bg: #fff4d6;
+    --theme-hint-border: #745000;
+    --theme-drag-border: #657287;
+    --syntax-text: #24292f;
+    --syntax-comment: #536174;
+    --syntax-keyword: #a12217;
+    --syntax-string: #174c80;
+    --syntax-number: #075a9c;
+    --syntax-variable: #8a3900;
+    --syntax-function: #6639a3;
+    --syntax-line-number: #536174;
+    --syntax-highlight: #edf2fa;
+    --syntax-selection: #c5dcff;
+    --syntax-match: #c9efd4;
+    --syntax-guide: #9ba8ba;
+    --syntax-scrollbar: 215, 15%, 45%;
+}
+
+:root[data-theme="high-contrast"] {
+    color-scheme: dark;
+    --color-gray-0: #fff;
+    --color-gray-50: #fff;
+    --color-gray-100: #fff;
+    --color-gray-150: #f0f0f0;
+    --color-gray-200: #e5e5e5;
+    --color-gray-250: #bdbdbd;
+    --color-gray-300: #202020;
+    --color-gray-400: #000;
+    --color-gray-500: #000;
+    --color-gray-600: #000;
+    --color-gray-900: #000;
+    --color-gray-t: #fff;
+    --color-msjc-red: #ffff00;
+    --color-gold-50: #ffff00;
+    --color-gold-100: #ffff00;
+    --color-yellow: #ffff00;
+    --color-green: #99ff99;
+    --color-blue: #66ddff;
+    --color-orange: #ffff00;
+    --color-violet-100: #202020;
+    --color-plum-100: #202020;
+    --theme-focus: #00ffff;
+    --theme-hex-section-green: #202020;
+    --theme-hex-section-border: #fff;
+    --theme-dis-current-bg: #202020;
+    --theme-dis-current-border: #00ffff;
+    --theme-exitcodeinfo-fg: #fff;
+    --theme-exitcodeinfo-bg: #000;
+    --theme-exitcodeinfo-border: #ffff00;
+    --theme-editor-bg: #000;
+    --theme-editor-error-bg: #000;
+    --theme-editor-error-fg: #ffb3b3;
+    --theme-dis-exit-bg: #000;
+    --theme-dis-red: #ffff00;
+    --theme-dis-brown: #ffb3b3;
+    --theme-dis-blue: #66ddff;
+    --theme-active-border: #00ffff;
+    --theme-selected-bg: #202020;
+    --theme-brand-bg: #000;
+    --theme-brand-fg: #ffff00;
+    --theme-brand-close-fg: #ffff00;
+    --theme-readline-bg: #000;
+    --theme-stdin-bg: #000;
+    --theme-warning-bg: #000;
+    --theme-warning-fg: #ffff00;
+    --theme-warning-border: #ffff00;
+    --theme-hint-bg: #000;
+    --theme-hint-border: #ffff00;
+    --theme-drag-border: #fff;
+    --syntax-text: #fff;
+    --syntax-comment: #dedede;
+    --syntax-keyword: #ffff00;
+    --syntax-string: #99ff99;
+    --syntax-number: #66ddff;
+    --syntax-variable: #ffff00;
+    --syntax-function: #ffb3ff;
+    --syntax-line-number: #dedede;
+    --syntax-highlight: #171717;
+    --syntax-selection: #333;
+    --syntax-match: #183838;
+    --syntax-guide: #bdbdbd;
+    --syntax-scrollbar: 0, 0%, 85%;
+}
+
+/* Scope editor overrides so the original GitHub Dark syntax colors stay intact.
+   Root selectors also cover menus and dialogs mounted outside the app element. */
+:root[data-theme="light"] .prism-code-editor,
+:root[data-theme="high-contrast"] .prism-code-editor {
+    color-scheme: inherit;
+    color: var(--syntax-text);
+    caret-color: var(--theme-focus);
+    --editor__bg: var(--theme-editor-bg);
+    --editor__line-number: var(--syntax-line-number);
+    --editor__bg-highlight: var(--syntax-highlight);
+    --editor__bg-selection-match: var(--syntax-match);
+    --editor__bg-scrollbar: var(--syntax-scrollbar);
+    --editor__bg-fold: var(--syntax-line-number);
+    --bg-guide-indent: var(--syntax-guide);
+    --widget__bg: var(--theme-panel-bg);
+    --widget__border: var(--theme-panel-border);
+    --widget__color: var(--theme-text-fg);
+    --widget__color-active: var(--color-gray-0);
+    --widget__color-options: var(--color-gray-150);
+    --widget__bg-input: var(--theme-editor-bg);
+    --widget__bg-hover: var(--theme-selected-bg);
+    --widget__bg-active: var(--theme-selected-bg);
+    --widget__focus-ring: var(--theme-focus);
+    --widget__bg-error: var(--theme-editor-error-bg);
+    --widget__error-ring: var(--theme-exitcodeinfo-border);
+    --search__bg-find: var(--syntax-match);
+}
+
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token { color: var(--syntax-text); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.comment, .prolog, .cdata) { color: var(--syntax-comment); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.keyword, .operator, .atrule, .deleted) { color: var(--syntax-keyword); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.string, .char, .attr-value, .inserted) { color: var(--syntax-string); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.number, .boolean, .constant, .builtin) { color: var(--syntax-number); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.variable, .register, .parameter) { color: var(--syntax-variable); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .token:is(.function, .label) { color: var(--syntax-function); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .active-line { --editor__line-number: var(--syntax-text); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor .guide-indents .active { --bg-guide-indent: var(--syntax-guide); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor textarea::selection { color: transparent; background: var(--syntax-selection); }
+:root[data-theme]:not([data-theme="dark"]) .prism-code-editor :is(.active-bracket, .active-tagname, .word-matches span) {
+    box-shadow: inset 0 0 0 1px var(--theme-focus), inset 0 0 0 9in var(--syntax-match);
+}
+:root[data-theme]:not([data-theme="dark"]) .stdin input {
+    background: var(--theme-panel-bg);
+    color: var(--theme-text-fg);
+}
+:root[data-theme="high-contrast"] .button--secondary { border-color: var(--theme-panel-border); }
+:root[data-theme="high-contrast"] [data-melt-dialog-close] { border: 1px solid var(--theme-panel-border); }
+:root[data-theme="high-contrast"] [data-melt-dialog-close]:hover { background: var(--color-gray-300); }

@@ -42,6 +42,6 @@
   }
   button { min-width: 2rem; padding: 0 0.3rem; }
   select { padding: 0 0.2rem; }
-  button:hover:not(:disabled) { background: var(--color-gray-400); color: white; }
+  button:hover:not(:disabled) { background: var(--color-gray-400); color: var(--color-gray-0); }
   button:disabled { opacity: 0.4; cursor: default; }
 </style>

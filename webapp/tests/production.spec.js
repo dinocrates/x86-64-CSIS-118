@@ -21,9 +21,13 @@ test('built Pages app loads its assets and runs Unit 1 at the repository subpath
   await page.goto('index.html?assignment=unit01-hello-assembly');
   await expect(page.locator('#assignment-select')).toHaveValue('unit01-hello-assembly');
   await expect(page.getByRole('button', { name: 'compile', exact: true })).toBeEnabled();
+  await page.getByRole('combobox', { name: 'Color theme' }).selectOption('light');
+  await expect(page.locator('.prism-code-editor')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   await page.getByRole('button', { name: 'compile', exact: true }).click();
   await expect(page.locator('.term__codewrap')).toContainText('Hello, Assembly!\nProgrammer: Your Name');
   await expect(page.locator('.exitcodeinfo')).toContainText('Exit(0)');
+  await page.getByRole('combobox', { name: 'Color theme' }).selectOption('high-contrast');
+  await expect(page.locator('.prism-code-editor')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
   await page.getByRole('button', { name: 'Check My Work', exact: true }).click();
   await expect(page.getByRole('region', { name: 'Check My Work results' })).toContainText('2 / 2');
   await page.getByRole('button', { name: /Instructions, submission, and grading/ }).click();
