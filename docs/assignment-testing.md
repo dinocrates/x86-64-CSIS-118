@@ -20,7 +20,12 @@ greeting exercise, using `main` and `csis118b.inc`. It is updated in place under
 the permanent ID **`unit01-hello-assembly`**, preserving its deep links and
 autosave key. Existing saved work is restored as-is; a student can download it
 before confirming **Reset to Starter Code** to obtain the new annotated starter.
-Units 2 and 3, templates, and free practice retain their existing behavior.
+Only Unit 1 is currently registered. Units 2 and 3 are unpublished drafts:
+their starter/test files are retained for future course assignments, but their
+placeholder entries are removed from the registry and Assignment menu. Existing
+saved work for those stable IDs is retained. Old direct links use the existing
+unknown-assignment recovery; shared source still loads even when its assignment
+is unavailable. Templates and free practice retain their existing behavior.
 
 After publication, use this exact launch URL:
 
@@ -159,7 +164,7 @@ comma is repaired; the deployment workflow and Vite base are unchanged.
 - Each assignment is an `AssignmentConfig` object: an id, title,
   description, starter code, and a list of visible tests.
 - Students open a Canvas assignment containing an iframe or link like
-  `index.html?assignment=unit02-register-arithmetic`. The playground
+  `index.html?assignment=unit01-hello-assembly`. The playground
   selects that assignment automatically, restoring the student's saved
   work for it (or the starter code on first open).
 - Students write code, click **Check My Work**, read the feedback, fix,
@@ -487,14 +492,14 @@ back to them under the failure).
 Each assignment has a stable URL:
 
 ```text
-https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit02-register-arithmetic
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit01-hello-assembly
 ```
 
 Embed it in a Canvas page or assignment:
 
 ```html
 <iframe
-  src="https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit02-register-arithmetic"
+  src="https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit01-hello-assembly"
   width="100%"
   height="900"
   style="border: 0;"

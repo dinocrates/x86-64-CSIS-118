@@ -37,6 +37,9 @@ test('starter launches, compiles, and runs; personalization and instructor rubri
   await open(page);
   await expect(page.locator(`#assignment-select option[value="${id}"]`)).toHaveCount(1);
   await expect(page.locator('#assignment-select')).toHaveValue(id);
+  await expect(page.locator('#assignment-select option')).toHaveText([
+    'Free practice — no assignment', 'Unit 1 — My First Assembly Program',
+  ]);
   const source = await editor(page).inputValue();
   await page.getByRole('button', { name: 'Instructions, submission, and grading · 30 points' }).click();
   await expect(page.getByRole('heading', { name: 'Unit 1 — My First Assembly Program' })).toBeVisible();
@@ -149,9 +152,9 @@ test('edits invalidate results, including edits during a running check', async (
   await editor(page).fill(source.replace('    exit ', '    jmp $ '));
   await page.getByRole('button', { name: 'Check My Work', exact: true }).click();
   await editor(page).fill(source);
-  await page.locator('#assignment-select').selectOption('unit02-register-arithmetic');
-  await expect(page.getByRole('button', { name: 'Checking…', exact: true })).toBeDisabled();
+  await page.locator('#assignment-select').selectOption('');
   await page.locator('#assignment-select').selectOption(id);
+  await expect(page.getByRole('button', { name: 'Checking…', exact: true })).toBeDisabled();
   await expect(editor(page)).toHaveValue(source);
   await expect(results(page)).toContainText('after the previous run finishes');
   await expect(page.getByRole('button', { name: 'Check My Work', exact: true })).toBeEnabled();
@@ -160,13 +163,11 @@ test('edits invalidate results, including edits during a running check', async (
   await expect(results(page)).toContainText('2 / 2');
 });
 
-test('save/open, refresh, revisit, reset confirmation, and other assignment/free practice recovery', async ({ page }) => {
+test('save/open, refresh, revisit, reset confirmation, and free practice recovery', async ({ page }) => {
   await open(page);
   const starter = await editor(page).inputValue();
   const source = personalize(starter) + '; Keep this extra comment and blank lines.\n\n';
   await editor(page).fill(source);
-  await page.locator('#assignment-select').selectOption('unit02-register-arithmetic');
-  await editor(page).fill('; My unit 2 work\nsection .text\nglobal add_numbers\nadd_numbers:\nmov rax, rdi\nadd rax, rsi\nret\n');
   await page.locator('#assignment-select').selectOption('');
   await editor(page).fill('; Free practice notes\n');
   await page.locator('#assignment-select').selectOption(id);
@@ -186,14 +187,27 @@ test('save/open, refresh, revisit, reset confirmation, and other assignment/free
   await expect(editor(page)).toHaveValue(starter);
   await page.locator('input[type=file][accept]').setInputFiles({ name: 'Rivera_Alex_U01.asm', mimeType: 'text/plain', buffer: Buffer.from(source) });
   await expect(editor(page)).toHaveValue(source);
-  await page.locator('#assignment-select').selectOption('unit02-register-arithmetic');
-  expect(await editor(page).inputValue()).toContain('; My unit 2 work');
-  await check(page);
-  await expect(results(page)).toContainText('5 / 5');
-  await page.locator('#assignment-select').selectOption('unit03-branching');
-  expect(await editor(page).inputValue()).toContain('max_of_two');
   await page.locator('#assignment-select').selectOption('');
   await expect(editor(page)).toHaveValue('; Free practice notes\n');
+  // Links to unreleased units use the existing unknown-assignment recovery.
+  // Their saved code remains available if that same stable ID is reintroduced.
+  await page.evaluate(async () => {
+    const { autosave_save } = await import('/x86-64-CSIS-118/src/core/assignmentAutosave.ts');
+    for (const assignmentId of ['unit02-register-arithmetic', 'unit03-branching']) {
+      autosave_save(assignmentId, { editorContent: '; Saved draft unit work\n', mode: 'NASM_trunk' });
+    }
+  });
+  for (const assignmentId of ['unit02-register-arithmetic', 'unit03-branching']) {
+    await open(page, `index.html?assignment=${assignmentId}`);
+    await expect(page.locator('#assignment-select')).toHaveValue('');
+    await expect(editor(page)).toHaveValue('; Free practice notes\n');
+    await expect(page.getByText('The requested assignment could not be found.', { exact: false })).toBeVisible();
+    const saved = await page.evaluate(async (draftId) => {
+      const { autosave_load } = await import('/x86-64-CSIS-118/src/core/assignmentAutosave.ts');
+      return autosave_load(draftId);
+    }, assignmentId);
+    expect(saved.editorContent).toBe('; Saved draft unit work\n');
+  }
 });
 
 test('share source wins over assignment starters/autosaves and legacy links remain compatible', async ({ page, context }) => {

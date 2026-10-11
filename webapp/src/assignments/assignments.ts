@@ -1,10 +1,6 @@
 import type { AssignmentConfig } from "./types";
 import { unit01HelloStarter } from "./starters/unit01_hello.asm";
-import { unit02ArithmeticStarter } from "./starters/unit02_arithmetic.asm";
-import { unit03BranchingStarter } from "./starters/unit03_branching.asm";
 import { unit01HelloTests } from "./tests/unit01_hello.tests";
-import { unit02ArithmeticTests } from "./tests/unit02_arithmetic.tests";
-import { unit03BranchingTests } from "./tests/unit03_branching.tests";
 import { unit01Instructions } from "./instructions/unit01";
 
 /**
@@ -36,33 +32,9 @@ export const unit01HelloAssignment: AssignmentConfig = {
 	],
 };
 
-export const unit02ArithmeticAssignment: AssignmentConfig = {
-	id: "unit02-register-arithmetic",
-	title: "Unit 2 - Register Arithmetic",
-	unit: "Unit 2",
-	description:
-		"Write a procedure that adds two integers passed in registers. " +
-		"Inputs: rdi and rsi. Output: rax = rdi + rsi. Do not rename the label.",
-	starterCode: unit02ArithmeticStarter,
-	tests: unit02ArithmeticTests,
-};
-
-export const unit03BranchingAssignment: AssignmentConfig = {
-	id: "unit03-branching",
-	title: "Unit 3 - Branching",
-	unit: "Unit 3",
-	description:
-		"Write a procedure that returns the larger of two integers. " +
-		"Inputs: rdi and rsi. Output: rax = the larger value. Do not rename the label.",
-	starterCode: unit03BranchingStarter,
-	tests: unit03BranchingTests,
-};
-
-export const assignments: AssignmentConfig[] = [
-	unit01HelloAssignment,
-	unit02ArithmeticAssignment,
-	unit03BranchingAssignment,
-];
+// Register units as their course assignments become ready. Draft starters and
+// tests for later units remain in their folders without appearing in the app.
+export const assignments: AssignmentConfig[] = [unit01HelloAssignment];
 
 export function getAssignmentById(id: string | null): AssignmentConfig | null {
 	if (!id) return null;
