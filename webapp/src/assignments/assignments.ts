@@ -2,6 +2,9 @@ import type { AssignmentConfig } from "./types";
 import { unit01HelloStarter } from "./starters/unit01_hello.asm";
 import { unit01HelloTests } from "./tests/unit01_hello.tests";
 import { unit01Instructions } from "./instructions/unit01";
+import { unit02MovieShowcaseStarter } from "./starters/unit02_movie_showcase.asm";
+import { unit02MovieShowcaseTests } from "./tests/unit02_movie_showcase.tests";
+import { unit02MovieShowcaseInstructions } from "./instructions/unit02_movie_showcase";
 
 /**
  * The CSIS-118B assignment list.
@@ -34,7 +37,22 @@ export const unit01HelloAssignment: AssignmentConfig = {
 
 // Register units as their course assignments become ready. Draft starters and
 // tests for later units remain in their folders without appearing in the app.
-export const assignments: AssignmentConfig[] = [unit01HelloAssignment];
+export const unit02MovieShowcaseAssignment: AssignmentConfig = {
+	id: "unit02-movie-showcase",
+	title: "Unit 2A — Movie Showcase",
+	unit: "Unit 2",
+	description: "Expand a NASM starter to print three movies. 30 points, graded by your instructor.",
+	starterCode: unit02MovieShowcaseStarter,
+	tests: unit02MovieShowcaseTests,
+	instructions: unit02MovieShowcaseInstructions,
+	submissionMode: "file-upload",
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+	],
+};
+
+export const assignments: AssignmentConfig[] = [unit01HelloAssignment, unit02MovieShowcaseAssignment];
 
 export function getAssignmentById(id: string | null): AssignmentConfig | null {
 	if (!id) return null;

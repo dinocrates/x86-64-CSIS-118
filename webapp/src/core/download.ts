@@ -7,10 +7,10 @@ import type {
  * File download helpers.
  *
  * The .asm filename is assignment-aware: when an assignment is selected
- * the download is named <assignment-id>.asm. The primary submission path
- * is the Copy Submission Link button (see core/shareLink.ts); this file
- * is a backup for programs too large to share as a link, or for a
- * student's own records.
+ * the download is named <assignment-id>.asm. Students rename the download
+ * as their assignment requires. Unit 02A submits this file with output
+ * evidence; Unit 1 uses Copy Submission Link (see core/shareLink.ts) and
+ * keeps the source download as a saved copy.
  */
 
 export function downloadTextFile(filename: string, content: string): void {

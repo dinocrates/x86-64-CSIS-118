@@ -13,6 +13,7 @@
   import AssignmentInstructions from './AssignmentInstructions.svelte';
   import { personalizationReminders } from '../testing/personalization';
   import { assignmentDetailsCollapsed } from '../core/displayPreferences';
+  import { downloadAsm } from '../core/download';
 
   $: reminders = $selectedAssignment
     ? personalizationReminders($editorContent_read, $selectedAssignment) : [];
@@ -88,7 +89,12 @@
       {/key}
       <div class="assignment__row assignment__actions">
         <CheckMyWorkButton />
-        <CopySubmissionLinkButton />
+        {#if $selectedAssignment.submissionMode === 'file-upload'}
+          <button type="button" class="button button--secondary"
+            on:click={() => downloadAsm($editorContent_read, $assignmentId)}>Download .asm file</button>
+        {:else}
+          <CopySubmissionLinkButton />
+        {/if}
         <button
           type="button"
           class="button button--secondary"
@@ -98,7 +104,9 @@
         </button>
       </div>
       <p class="assignment__submitnote">
-        {#if $selectedAssignment.instructions}
+        {#if $selectedAssignment.submissionMode === 'file-upload'}
+          Submit your final .asm source and output evidence in Canvas File Upload. Rename the downloaded file as shown in the submission checklist.
+        {:else if $selectedAssignment.instructions}
           Submit your tested share link, two output lines, and three written responses in Canvas Text Entry.
         {:else}
           When you're finished, click <strong>Copy Submission Link</strong> and paste it into Canvas.
@@ -110,7 +118,7 @@
           {#if reminders.length}
             <ul>{#each reminders as reminder}<li>{reminder}</li>{/each}</ul>
           {/if}
-          <p>A program can pass execution checks while still needing personalization. Review your comments, debugger observation, and the manual completion checklist before submitting.</p>
+          <p>A program can pass execution checks while still needing personalization. Review your comments{#if $selectedAssignment.submissionMode !== 'file-upload'}, debugger observation{/if}, and the manual completion checklist before submitting.</p>
         </details>
       {/if}
     {/if}

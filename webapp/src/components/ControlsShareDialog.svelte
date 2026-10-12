@@ -72,8 +72,12 @@
         <p {...$description} use:description>
           {#if $selectedAssignment}
             Copy this link to share your {$selectedAssignment.title} code.
-            Opening it reopens this exact code in this assignment — you
-            can also paste it into Canvas as your submission.
+            Opening it reopens this exact code in this assignment.
+            {#if $selectedAssignment.submissionMode === 'file-upload'}
+              For this assignment, submit your .asm file and output evidence in Canvas.
+            {:else}
+              You can also paste it into Canvas as your submission.
+            {/if}
           {:else}
             Copy this link to share your playground code
             with others.

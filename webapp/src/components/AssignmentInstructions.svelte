@@ -35,9 +35,11 @@
               </li>
             {/each}
           </ol>
-          <h3>Submission in Canvas Text Entry</h3>
+          <h3>{assignment.submissionMode === 'file-upload' ? 'Submission in Canvas File Upload' : 'Submission in Canvas Text Entry'}</h3>
           <ul>{#each instructions.submission as item}<li>{item}</li>{/each}</ul>
-          <p>The last three items are written responses in Canvas. Your downloaded .asm file is your saved copy. Screenshots are not required.</p>
+          {#if assignment.submissionMode !== 'file-upload'}
+            <p>The last three items are written responses in Canvas. Your downloaded .asm file is your saved copy. Screenshots are not required.</p>
+          {/if}
           <h3>Grading criteria · {instructions.points} points</h3>
           <p>Your instructor awards credit, including partial credit, using these criteria. Practice checks give feedback and do not award a numerical grade or guarantee full credit.</p>
           <ul>
@@ -47,7 +49,7 @@
           </ul>
           <h3>Manual completion checklist</h3>
           <ul>{#each instructions.completionChecklist as item}<li>{item}</li>{/each}</ul>
-          <p>Comment originality and accuracy, your debugging process, and written explanations are reviewed by your instructor.</p>
+          <p>{assignment.submissionMode === 'file-upload' ? 'Movie A retention, movie accuracy, distinct choices for B and C, and documentation are reviewed by your instructor. Practice checks do not prove factual accuracy or originality.' : 'Comment originality and accuracy, your debugging process, and written explanations are reviewed by your instructor.'}</p>
         </div>
       </div>
     </div>

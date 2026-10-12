@@ -13,7 +13,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   projects: [
-    { name: 'app', testMatch: ['unit01.spec.js', 'themes.spec.js'], use: { baseURL: 'http://127.0.0.1:4173/x86-64-CSIS-118/' } },
+    { name: 'app', testMatch: ['unit01.spec.js', 'unit02.spec.js', 'themes.spec.js'], use: { baseURL: 'http://127.0.0.1:4173/x86-64-CSIS-118/' } },
     { name: 'production', testMatch: 'production.spec.js', use: { baseURL: 'http://127.0.0.1:4174/x86-64-CSIS-118/' } },
   ],
   webServer: [

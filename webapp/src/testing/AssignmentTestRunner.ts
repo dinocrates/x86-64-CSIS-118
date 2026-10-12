@@ -21,7 +21,7 @@ import {
 	formatU64,
 } from "./registerChecks";
 import { hasLabel, runSourceCheckTest } from "./sourceChecks";
-import { checkMessageLines, compareStdout } from "./stdoutCompare";
+import { checkMessageLines, checkMovieRecords, compareStdout } from "./stdoutCompare";
 import { personalizationReminders } from "./personalization";
 import {
 	type HarnessRequest,
@@ -421,8 +421,18 @@ async function runStdoutTest(
 			loadedSource,
 		};
 	}
+	if (test.movieRecords) {
+		const problem = checkMovieRecords(actual, test.movieRecords);
+		return {
+			result: finish(test, problem ? "failed" : "passed", {
+				message: problem ?? "Your program printed three complete movie records and exited normally. Review movie accuracy, comments, and the submission checklist with your instructor's rubric.",
+				actual: truncate(actual),
+			}),
+			loadedSource,
+		};
+	}
 	if (test.expectedStdout === undefined) {
-		throw new Error("A stdout check needs expectedStdout or messageLines.");
+		throw new Error("A stdout check needs expectedStdout, messageLines, or movieRecords.");
 	}
 
 	const mode = test.compareMode ?? "normalized";

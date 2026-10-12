@@ -68,6 +68,50 @@ function patternMatches(pattern: string, text: string): boolean {
 	}
 }
 
+/** Narrow formative scanner, not a NASM parser: mask literals and comments
+ * while preserving lines. Only backtick strings have NASM backslash escapes.
+ * Includes are deliberately not expanded; library sections do not count. */
+function studentCodeTokens(source: string): string {
+	return source.replace(/\r\n?/g, "\n").split("\n").map((line) => {
+		let quote: string | null = null;
+		let tokens = "";
+		for (let i = 0; i < line.length; i++) {
+			const c = line[i];
+			if (quote) {
+				tokens += " ";
+				if (quote === "`" && c === "\\") { tokens += " "; i++; }
+				else if (c === quote) quote = null;
+			} else if (c === ";") break;
+			else if (c === '"' || c === "'" || c === "`") {
+				quote = c;
+				tokens += " ";
+			} else tokens += c;
+		}
+		return tokens;
+	}).join("\n");
+}
+
+export function checkStudentOrganization(source: string, test: SourceCheckTest): string[] {
+	if (!test.requiredDataLabels && !test.studentSectionCounts) return [];
+	const tokens = studentCodeTokens(source);
+	const problems: string[] = [];
+	const definitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][bB])\b/gm)];
+	for (const label of test.requiredDataLabels ?? []) {
+		if (definitions.filter((definition) => definition[1] === label).length !== 1) {
+			problems.push(`Define \`${label}\` once as its own db string in section .data. A colon before db is optional.`);
+		}
+	}
+	if (test.studentSectionCounts) {
+		const sections = [...tokens.matchAll(/^\s*(?:\[\s*)?section\s+(\.data|\.text)(?=\s|\]|$)/gim)];
+		for (const section of ["data", "text"] as const) {
+			const count = sections.filter((match) => match[1].toLowerCase() === `.${section}`).length;
+			const expected = test.studentSectionCounts[section];
+			if (count !== expected) problems.push(`For this lab, keep exactly ${expected} section .${section} declaration in your own source; found ${count}. NASM allows repeated sections, but this assignment asks you to organize each section together.`);
+		}
+	}
+	return problems;
+}
+
 /**
  * Run one source-check test.
  *
@@ -82,6 +126,7 @@ export function runSourceCheckTest(
 	source: string,
 ): AssignmentSingleTestResult {
 	const problems: string[] = [];
+	problems.push(...checkStudentOrganization(source, test));
 
 	for (const label of test.requiredLabels ?? []) {
 		if (!hasLabel(source, label)) {

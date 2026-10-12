@@ -16,6 +16,8 @@ export interface AssignmentConfig {
 	starterCode: string;
 	tests: AssignmentTest[];
 	instructions?: AssignmentInstructions;
+	/** Omitted assignments retain the existing Canvas Text Entry workflow. */
+	submissionMode?: "file-upload";
 	/** Advisory source reminders only; never execution checks or grades. */
 	personalizationReminders?: { pattern: string; message: string }[];
 }
@@ -81,6 +83,10 @@ export interface SourceCheckTest extends BaseTest {
 	type: "source-check";
 	/** Labels that must be defined, e.g. ["add_numbers"]. */
 	requiredLabels?: string[];
+	/** Separate named db definitions; NASM data-label colons are optional. */
+	requiredDataLabels?: string[];
+	/** Opt-in lab organization check on student source before includes expand. */
+	studentSectionCounts?: { data: number; text: number };
 	/** Regex sources (or plain strings) that must NOT appear. */
 	bannedPatterns?: string[];
 	/** Regex sources (or plain strings) that must appear. */
@@ -99,6 +105,8 @@ export interface StdoutTest extends BaseTest {
 	compareMode?: "exact" | "trimmed" | "normalized";
 	/** Alternative to a fixed output string, for personalized full programs. */
 	messageLines?: { count: number; identifyingPrefix: string };
+	/** Personalized Title/Year/Director records, separated by blank lines. */
+	movieRecords?: { count: number };
 	expectedExitCode?: number;
 }
 

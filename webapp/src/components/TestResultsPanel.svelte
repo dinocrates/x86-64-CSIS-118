@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { assignmentId } from '../core/store';
+  import { assignmentId, selectedAssignment } from '../core/store';
   import { downloadTestReport } from '../core/download';
   import { checkRun, dismissCheckResults } from '../testing/reportStore';
   import { MESSAGES } from '../testing/TestResultTypes';
@@ -106,7 +106,7 @@
         <p><strong>Program checks and submission preparation are separate.</strong> Personalization still needed:</p>
         <ul>{#each report.reminders as reminder}<li>{reminder}</li>{/each}</ul>
       {/if}
-      <p class="results__note">{MESSAGES.checkMyWorkNote}</p>
+      <p class="results__note">{#if $selectedAssignment?.submissionMode === 'file-upload'}Check My Work runs practice tests in your browser. Passing these tests does not guarantee full credit. Download your final .asm source and submit it with output evidence in Canvas, following this assignment's checklist.{:else}{MESSAGES.checkMyWorkNote}{/if}</p>
     {/if}
   </section>
 {/if}

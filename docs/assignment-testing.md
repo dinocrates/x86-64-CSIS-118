@@ -8,8 +8,8 @@ pieces fit together.
 **Student-facing feature name:** *Check My Work* (never "grade" or
 "autograde" for the practice checks themselves — see
 [Why this is not grading](#why-check-my-work-is-not-official-grading)).
-Submission uses a separate, explicitly-labeled **Copy Submission Link**
-action — see [Submitting via the submission link](#submitting-via-the-submission-link).
+Submission follows each assignment's checklist: Unit 1 uses **Copy Submission
+Link** with Canvas Text Entry; Unit 02A uses source and output file uploads.
 
 ---
 
@@ -20,7 +20,8 @@ greeting exercise, using `main` and `csis118b.inc`. It is updated in place under
 the permanent ID **`unit01-hello-assembly`**, preserving its deep links and
 autosave key. Existing saved work is restored as-is; a student can download it
 before confirming **Reset to Starter Code** to obtain the new annotated starter.
-Only Unit 1 is currently registered. Units 2 and 3 are unpublished drafts:
+Unit 1 and Unit 02A Movie Showcase are registered. The former Unit 2 arithmetic
+and Unit 3 branching entries are unpublished drafts:
 their starter/test files are retained for future course assignments, but their
 placeholder entries are removed from the registry and Assignment menu. Existing
 saved work for those stable IDs is retained. Old direct links use the existing
@@ -174,6 +175,137 @@ comma is repaired; the deployment workflow and Vite base are unchanged.
 
 ---
 
+## Unit 02A — Movie Showcase
+
+The new stable ID is **`unit02-movie-showcase`**, registered immediately after
+Unit 1. It does not reuse `unit02-register-arithmetic` or activate that draft
+or the Unit 3 branching draft. Unit 1's starter, ID, saved work, and link format
+are unchanged.
+
+After deployment, use:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit02-movie-showcase
+```
+
+For local review, use the Vite server's repository subpath with the same query:
+`/x86-64-CSIS-118/index.html?assignment=unit02-movie-showcase`. Local validation
+does not update the public site. Publish only when the instructor requests it;
+the existing workflow deploys changes pushed to `master` under `webapp/**`.
+Canvas content, lectures, and iframe layout remain instructor-owned.
+
+### Scope and submission
+
+The complete, runnable starter prints only Movie A:
+
+```text
+Title: Star Wars: Episode IV
+Year: 1977
+Director: George Lucas
+```
+
+Students keep A and add distinct choices B and C: nine separate null-terminated
+`db` strings named `movieTitleA`, `movieYearA`, `movieDirectorA` and the matching
+B/C labels. Years are quoted text. Each string address goes into RDI before
+`print_line`; `print_newline` separates records. The existing `csis118b.inc`
+provides startup and `exit`. The runtime asset and public include copies agree;
+neither is modified. No input, loops, new procedures, raw syscalls, terminal
+clearing, or prompts are required.
+
+This is **30 points, graded by the instructor** (10 execution + 12 movie
+output + 4 organization + 4 documentation). **Canvas File Upload** receives
+`Lastname_Firstname_U02A.asm` and a readable screenshot of all three records.
+An output text file can replace the screenshot for accessibility; readable
+output can also accompany a submission comment. Download names remain
+`unit02-movie-showcase.asm`; students rename the downloaded file. The assignment
+offers **Download .asm file** through the existing download helper; File options
+and Ctrl+S still work. Generic Share/Copy Code remain available for reproducible
+code, but the instructions and results do not suggest a share link replaces
+the required files. Unit 1 retains its Text Entry/share-link checklist.
+
+### Practice output and source contracts
+
+Four visible checks have **no per-test points**: assembly/linking; `main` and
+nine separate `db` definitions; one student `.data` and one student `.text`
+declaration; three complete output records with exit status zero. The starter
+passes assembly and section organization, and fails missing B/C labels and
+output with helpful feedback. Name/date reminders are advisory; placeholders
+and TODO comments alone never fail execution checks.
+
+The typed opt-in stdout contract is `movieRecords: { count: 3 }`, implemented
+by the pure `checkMovieRecords` helper in `stdoutCompare.ts` and the existing
+stdout runner. It normalizes CRLF/CR, ignores surrounding empty lines and
+trailing spaces/tabs, allows multiple blank separators, and permits an optional
+final newline. It requires exactly three groups of three nonempty lines:
+case-sensitive `Title:`, `Year:`, `Director:` in order, nonempty trimmed values,
+and four ASCII digits for the year. Extra nonempty output and missing separators
+fail. Punctuation, Unicode, apostrophes, semicolons, and multiple directors are
+valid; there is no movie database, year range, fixed B/C choice, or length rule.
+Identical full records fail; different records with the same title are valid.
+Movie A retention, factual accuracy, distinct choices, and documentation remain
+manual rubric checks. Existing `messageLines` and fixed-stdout contracts retain
+their behavior.
+
+`SourceCheckTest.requiredDataLabels` uses a narrow scanner for actual separate
+`db` definitions with optional data-label colons and case-sensitive names.
+`studentSectionCounts: { data: 1, text: 1 }` checks student source before include
+expansion, accepting directive case, whitespace, and ordinary section attributes.
+Both checks ignore comments and quoted lookalikes (including NASM backtick
+strings). Existing colon-based procedure label checks are unchanged. This lab's
+section rule is not a universal NASM restriction. These formative checks are
+not a complete NASM parser, secure grading system, or plagiarism detector.
+
+Assembly failures still block runtime checks; stdout capture strips only the
+existing launch prompt and excludes stderr. The dedicated test machine enforces
+timeouts and expected exit status without changing the editor/debugger. The
+new `submissionMode: "file-upload"` configuration makes instructions, selector,
+results, and generic Share guidance assignment-specific. Existing autosave,
+selection, confirmed reset, source download, and share payload behavior are reused.
+Saved Unit 02A work takes precedence over the starter; shared source takes
+precedence over conflicting autosave/query parameters.
+
+### Validation
+
+`webapp/tests/unit02.spec.js` exercises the real NASM/linker/Blink starter and
+a complete arbitrary three-movie fixture (kept only in tests), assembly errors,
+exit status, timeout/recovery, source/output edge cases, save isolation,
+reset/download/share behavior, and keyboard instructions/results in all three
+themes at desktop and narrow widths. Existing Unit 1, theme, and production
+tests remain regression gates. Run from `webapp`:
+
+```powershell
+npm run build
+npm test -- --project=app unit02.spec.js
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+```
+
+The test suite is local Chromium coverage, not a cross-browser certification or
+full accessibility audit. The completion report records actual commands and
+results and distinguishes local review from deployment.
+
+Local implementation verification (Windows, installed Chromium):
+
+- `npm run build` passed, with only the existing Svelte accessibility and unused
+  CSS warnings in other components.
+- `node <installed-typescript>/bin/tsc -p tsconfig.typecheck.json` passed using
+  the cached TypeScript compiler.
+- `npm test` passed **25/25** in 9.2 minutes, including all six Unit 02A cases,
+  Unit 1 regressions, themes, and both production-build checks.
+- After strengthening keyboard End scrolling to wait for the full checklist,
+  `npm test -- --project=app unit02.spec.js --grep 'movie instructions and practice readouts'`
+  passed **1/1** across dark/light/high-contrast at 1600 and 390 px widths.
+- The supplied starter matched exactly after newline normalization (1,005
+  characters); its real stdout and exit zero were verified. Both include copies
+  have identical SHA-256 hashes. `git -c core.safecrlf=false diff --check` passed.
+
+These checks were completed locally before publication.
+Firefox, Safari, physical mobile devices, and an actual Canvas iframe were not
+tested. Publication requires the instructor's request; after deployment,
+verify the public launch link separately from these local checks.
+
+---
+
 ## How the system works (one-minute version)
 
 - Each assignment is an `AssignmentConfig` object: an id, title,
@@ -183,8 +315,8 @@ comma is repaired; the deployment workflow and Vite base are unchanged.
   selects that assignment automatically, restoring the student's saved
   work for it (or the starter code on first open).
 - Students write code, click **Check My Work**, read the feedback, fix,
-  repeat — then click **Copy Submission Link** and paste it into Canvas
-  as their submission.
+  repeat — then follow the assignment's Canvas submission checklist (a link
+  and responses for Unit 1; source and output files for Unit 02A).
 - All checks run inside a second, dedicated copy of the in-browser
   emulator, so the student's editor/debugger state is never disturbed.
   Nothing ever leaves the browser — the submission link itself is just
@@ -542,9 +674,10 @@ Practical notes:
 
 ## Submitting via the submission link
 
-Students submit an assignment by clicking **Copy Submission Link** (next
-to Check My Work, visible whenever an assignment is selected) and
-pasting the copied URL into Canvas.
+For assignments using link submission, students click **Copy Submission Link**
+next to Check My Work and paste the copied URL into Canvas. Unit 02A instead
+shows **Download .asm file** for its file-upload workflow; generic **Share**
+remains available without replacing its required submission files.
 
 ### How it works
 
@@ -572,6 +705,9 @@ the priority order documented at the top of `createBlinkStore()` in
 For **Unit 1 — My First Assembly Program**, choose **Online** → **Text Entry**
 so students can include the share link, output, and three written responses
 together, as specified in the Unit 1 handoff above.
+
+For **Unit 02A — Movie Showcase**, choose **Online** → **File Uploads** and
+follow the source/output evidence checklist above.
 
 For assignments whose instructions request a URL alone, choose **Online** →
 **Website URL**. Students paste the copied link into that field and
@@ -606,7 +742,7 @@ Every assignment saves to its own browser localStorage key:
 ```text
 csis118b.autosave.default                      ← free practice
 csis118b.autosave.unit01-hello-assembly
-csis118b.autosave.unit02-register-arithmetic
+csis118b.autosave.unit02-movie-showcase
 ```
 
 - Edits autosave ~1.5 s after the last keystroke, to the key of the
@@ -629,10 +765,10 @@ csis118b.autosave.unit02-register-arithmetic
 
 - **`.asm` file:** Ctrl+S or *File → Save .asm file*. Named
   `<assignment-id>.asm` when an assignment is selected (e.g.
-  `unit02-register-arithmetic.asm`), else `program.asm`. The primary
-  submission path is the [submission link](#submitting-via-the-submission-link);
-  this download is the fallback for programs too large to link, and for
-  a student's own backup/records across devices.
+  `unit02-movie-showcase.asm`), else `program.asm`. Unit 02A requires this
+  source file, renamed as its checklist describes. Unit 1 uses the
+  [submission link](#submitting-via-the-submission-link) and keeps a source
+  download for backup/records across devices.
 - **Test report:** after running checks, *Download Test Report* saves
   `csis118b-<assignment-id>-test-report.txt` — assignment, timestamp,
   summary, per-test results, and a `sha256` hash of the exact source

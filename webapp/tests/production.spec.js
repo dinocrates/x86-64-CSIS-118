@@ -1,5 +1,28 @@
 import { test, expect } from '@playwright/test';
 
+test('built Pages app opens Unit 02A and runs its starter and practice checks', async ({ page, context }) => {
+  const errors = [];
+  const failedAssets = [];
+  await context.route('**/analytics.halb.it/**', (route) => route.fulfill({ body: '' }));
+  page.on('pageerror', (error) => errors.push(error.message));
+  page.on('response', (response) => {
+    if (response.url().startsWith('http://127.0.0.1:4174/') && response.status() >= 400) failedAssets.push(response.url());
+  });
+  await page.goto('index.html?assignment=unit02-movie-showcase');
+  await expect(page.locator('#assignment-select')).toHaveValue('unit02-movie-showcase');
+  await expect(page.getByRole('button', { name: 'compile', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'compile', exact: true }).click();
+  await expect(page.locator('.term__codewrap')).toContainText('Title: Star Wars: Episode IV\nYear: 1977\nDirector: George Lucas');
+  await expect(page.locator('.term .exitcodeinfo')).toContainText('Exit(0)');
+  await page.getByRole('button', { name: 'Check My Work', exact: true }).click();
+  const results = page.getByRole('region', { name: 'Check My Work results' });
+  await expect(results).toContainText('2 / 4');
+  await expect(results).toContainText('submit it with output evidence in Canvas');
+  await expect(page.getByRole('button', { name: 'Download .asm file', exact: true })).toBeVisible();
+  expect(errors).toEqual([]);
+  expect(failedAssets).toEqual([]);
+});
+
 test('built Pages app loads its assets and runs Unit 1 at the repository subpath', async ({ page, context }) => {
   const errors = [];
   const failedAssets = [];
