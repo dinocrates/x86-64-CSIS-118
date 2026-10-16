@@ -1,29 +1,47 @@
 <script>
 import { blinkStore, manual_render } from "../core/store";
+import { REGISTER_FAMILIES, NUMBER_BASES } from "../core/registerFamilies";
+import RegisterBreakdown from "./RegisterBreakdown.svelte";
 
 const blink = blinkStore.getInstance();
 
 let registers = [
-	{ name: "rax", updated: false, str: "0x00" },
-	{ name: "rbx", updated: false, str: "0x00" },
-	{ name: "rcx", updated: false, str: "0x00" },
-	{ name: "rdx", updated: false, str: "0x00" },
+	{ name: "rax", updated: false, str: "0x00", value: 0n },
+	{ name: "rbx", updated: false, str: "0x00", value: 0n },
+	{ name: "rcx", updated: false, str: "0x00", value: 0n },
+	{ name: "rdx", updated: false, str: "0x00", value: 0n },
 
-	{ name: "rsp", updated: false, str: "0x00" },
-	{ name: "rbp", updated: false, str: "0x00" },
-	{ name: "rsi", updated: false, str: "0x00" },
-	{ name: "rdi", updated: false, str: "0x00" },
+	{ name: "rsp", updated: false, str: "0x00", value: 0n },
+	{ name: "rbp", updated: false, str: "0x00", value: 0n },
+	{ name: "rsi", updated: false, str: "0x00", value: 0n },
+	{ name: "rdi", updated: false, str: "0x00", value: 0n },
 
-	{ name: "r8 ", updated: false, str: "0x00" },
-	{ name: "r9 ", updated: false, str: "0x00" },
-	{ name: "r10", updated: false, str: "0x00" },
-	{ name: "r11", updated: false, str: "0x00" },
-	{ name: "r12", updated: false, str: "0x00" },
-	{ name: "r13", updated: false, str: "0x00" },
-	{ name: "r14", updated: false, str: "0x00" },
-	{ name: "r15", updated: false, str: "0x00" },
-	{ name: "rip", updated: true, str: "0x00" },
+	{ name: "r8 ", updated: false, str: "0x00", value: 0n },
+	{ name: "r9 ", updated: false, str: "0x00", value: 0n },
+	{ name: "r10", updated: false, str: "0x00", value: 0n },
+	{ name: "r11", updated: false, str: "0x00", value: 0n },
+	{ name: "r12", updated: false, str: "0x00", value: 0n },
+	{ name: "r13", updated: false, str: "0x00", value: 0n },
+	{ name: "r14", updated: false, str: "0x00", value: 0n },
+	{ name: "r15", updated: false, str: "0x00", value: 0n },
+	{ name: "rip", updated: true, str: "0x00", value: 0n },
 ];
+
+// numeric base used by every expanded/hovered register breakdown
+let numberBase = "hex";
+
+// names (trimmed) of registers currently pinned open by a click
+let expanded = new Set();
+
+function toggleExpand(name) {
+	const key = name.trim();
+	if (expanded.has(key)) {
+		expanded.delete(key);
+	} else {
+		expanded.add(key);
+	}
+	expanded = expanded;
+}
 
 let eflagsStr = "0x0";
 let eflagsBytes = BigInt(0x0);
@@ -147,6 +165,7 @@ function updateRegisters() {
 
 	for (const reg of registers) {
 		const new_str = blink.m.stringReadU64(reg.name.trim());
+		reg.value = blink.m.readU64(reg.name.trim());
 		if (new_str === reg.str) {
 			reg.updated = false;
 		} else {
@@ -183,11 +202,41 @@ $: $manual_render && updateRegisters();
 </script>
 
 <section class="registers">
+    <div class="base-toggle" role="group" aria-label="Number base for register breakdown">
+      {#each NUMBER_BASES as b}
+        <button
+          type="button"
+          class="base-toggle__btn"
+          class:active={numberBase === b.id}
+          on:click={() => (numberBase = b.id)}
+        >{b.label}</button>
+      {/each}
+    </div>
 {#each registers as r}
-    <p>
-      <span class="name infotooltip" tabindex="0" aria-describedby="info-tooltip" class:updated={r.updated}>{r.name}</span> : 
-      <span class="int">{r.str}</span>
-    </p>
+    {@const key = r.name.trim()}
+    {@const hasFamily = !!REGISTER_FAMILIES[key]}
+    <div class="reg-row">
+      <p>
+        {#if hasFamily}
+          <button
+            type="button"
+            class="name regname-btn infotooltip"
+            class:updated={r.updated}
+            aria-expanded={expanded.has(key)}
+            on:click={() => toggleExpand(r.name)}
+          ><span class="chevron">{expanded.has(key) ? "▾" : "▸"}</span>{r.name}</button>
+        {:else}
+          <span class="name infotooltip" tabindex="0" aria-describedby="info-tooltip" class:updated={r.updated}>{r.name}</span>
+        {/if}
+         :
+        <span class="int">{r.str}</span>
+      </p>
+      {#if hasFamily && expanded.has(key)}
+        <div class="reg-panel reg-panel--pinned">
+          <RegisterBreakdown regName={key} value={r.value} base={numberBase} />
+        </div>
+      {/if}
+    </div>
 {/each}
     <br/>
     <p>
@@ -239,6 +288,51 @@ $: $manual_render && updateRegisters();
     text-decoration: underline;
     cursor: pointer;
   }
+}
+
+.base-toggle {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 0.4rem;
+}
+.base-toggle__btn {
+  background: none;
+  border: 1px solid var(--theme-panel-border);
+  color: var(--theme-text-fg-disabled);
+  font: inherit;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.base-toggle__btn.active {
+  color: var(--theme-text-fg-contrasting);
+  background-color: var(--theme-selected-bg);
+  border-color: var(--theme-focus);
+}
+
+.regname-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.chevron {
+  display: inline-block;
+  width: 0.8em;
+  font-size: 0.7em;
+  opacity: 0.7;
+}
+
+.reg-panel {
+  background-color: var(--theme-panel-controls-bg);
+  border: 1px solid var(--theme-panel-border);
+  border-radius: 4px;
+  margin: 0.1rem 0 0.25rem;
 }
 
 </style>

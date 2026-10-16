@@ -113,6 +113,8 @@
     --theme-reg-value-int: var(--color-gray-0);
     --theme-reg-name: var(--color-blue);
     --theme-reg-name-updated: var(--color-orange);
+    --theme-regbar-upper: var(--color-gray-300);
+    --theme-regbar-lo8: var(--color-orange);
 
     /* disassembler view */
     --theme-disaddr-fg: var(--color-gray-0);
