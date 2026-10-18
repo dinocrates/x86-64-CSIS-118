@@ -1,7 +1,8 @@
 <script>
-import {blinkStore, state, editorContent_write, editorContent_read} from '../core/store'
+import {blinkStore, state, manual_render, editorContent_write, editorContent_read} from '../core/store'
 import {onMount} from 'svelte'
 import { editorFontSize } from '../core/displayPreferences'
+import { debugSourceMap } from '../core/sourceMap'
 import { createEditor } from "prism-code-editor"
 
 // Prism grammars
@@ -26,6 +27,114 @@ let editor;
 let rendered_errors = [];
 
 let blink = blinkStore.getInstance()
+
+// ---- debug-session gutter: current-line highlight + breakpoints ----
+let breakpoint_lines = new Set(); // 1-indexed source line numbers
+let last_bp_load_generation = -1;
+let current_debug_line = null;
+
+function clearCurrentLineHighlight() {
+  if (!editor || current_debug_line == null) return;
+  const el = editor.wrapper.children[current_debug_line];
+  if (el) el.classList.remove('editor__currentline');
+  current_debug_line = null;
+}
+
+function applyBreakpointMarkers() {
+  if (!editor) return;
+  const lines = editor.wrapper.children;
+  for (let i = 1; i < lines.length; i++) {
+    lines[i].classList.toggle('editor__bp-armed', breakpoint_lines.has(i));
+  }
+}
+
+function updateDebugUI() {
+  if (!editor || !blink.m) return;
+
+  // a fresh program load clears breakpoints on the C side too (see
+  // Disassembler.svelte for the same pattern); keep our markers in sync.
+  const gen = blink.getLoadGeneration();
+  if (gen !== last_bp_load_generation) {
+    last_bp_load_generation = gen;
+    breakpoint_lines = new Set();
+  }
+  applyBreakpointMarkers();
+
+  if (
+    !$debugSourceMap ||
+    !(blink.state === blink.states.PROGRAM_RUNNING ||
+      blink.state === blink.states.PROGRAM_STOPPED)
+  ) {
+    clearCurrentLineHighlight();
+    return;
+  }
+
+  const rip = Number(blink.m.readU64('rip'));
+  const line = $debugSourceMap.lineForAddress(rip);
+  if (line === current_debug_line) return;
+  clearCurrentLineHighlight();
+  const el = line != null ? editor.wrapper.children[line] : null;
+  if (el) {
+    el.classList.add('editor__currentline');
+    current_debug_line = line;
+    el.scrollIntoView({ block: 'nearest' });
+  }
+}
+
+$: $manual_render && updateDebugUI();
+
+// Breakpoints toggle from a click in the line-number gutter specifically,
+// so normal clicks still just place the text caret. The gutter has no
+// real DOM element of its own (the number is CSS content on .pce-line),
+// and that .pce-line box is pointer-events:none (only the textarea that
+// overlays the whole line is interactive) - so hit-testing is done by
+// geometry: which line's rect contains the pointer, and is it left of the
+// textarea's own computed padding (which exactly matches the gutter width).
+function hitTestGutter(clientX, clientY) {
+  if (!editor) return null;
+  const textarea = editor_elem.querySelector('textarea');
+  if (!textarea) return null;
+  const gutterPx = parseFloat(getComputedStyle(textarea).paddingLeft);
+  const lines = editor.wrapper.children;
+  for (let i = 1; i < lines.length; i++) {
+    const rect = lines[i].getBoundingClientRect();
+    if (clientY >= rect.top && clientY < rect.bottom) {
+      return { lineIndex: i, inGutter: clientX - rect.left < gutterPx };
+    }
+  }
+  return null;
+}
+
+function handleGutterMousedown(e) {
+  if (!editor || !$debugSourceMap) return;
+  const hit = hitTestGutter(e.clientX, e.clientY);
+  if (!hit || !hit.inGutter) return;
+  const addr = $debugSourceMap.addressForLine(hit.lineIndex);
+  if (addr === null) return;
+  e.preventDefault();
+  const isSet = blink.toggleBreakpoint(addr);
+  if (isSet) breakpoint_lines.add(hit.lineIndex);
+  else breakpoint_lines.delete(hit.lineIndex);
+  applyBreakpointMarkers();
+}
+
+// Swap in a pointer cursor while hovering a gutter cell that can actually
+// take a breakpoint, so the text caret doesn't show over something
+// clickable. The textarea covers the whole editor, so its CSS cursor is
+// what the user actually sees regardless of which line is under it.
+function handleEditorMousemove(e) {
+  const textarea = editor_elem && editor_elem.querySelector('textarea');
+  if (!textarea) return;
+  const hit = $debugSourceMap && hitTestGutter(e.clientX, e.clientY);
+  const clickable =
+    hit && hit.inGutter && $debugSourceMap.addressForLine(hit.lineIndex) !== null;
+  textarea.style.cursor = clickable ? 'pointer' : '';
+}
+
+function handleEditorMouseleave() {
+  const textarea = editor_elem && editor_elem.querySelector('textarea');
+  if (textarea) textarea.style.cursor = '';
+}
 
 // render conditionals
 let invalidElf = false;
@@ -135,7 +244,10 @@ onMount(() => {
   {/if}
   <div class="editor" bind:this={editor_elem}
     style:--editor-font-size={$editorFontSize + 'px'}
-    class:hidden={$blinkStore.uploadedElf}> </div>
+    class:hidden={$blinkStore.uploadedElf}
+    on:mousedown={handleGutterMousedown}
+    on:mousemove={handleEditorMousemove}
+    on:mouseleave={handleEditorMouseleave}> </div>
 </div>
 
 <style>

@@ -398,6 +398,28 @@ body {
     background-color: var(--theme-dis-exit-bg);
 }
 
+.disass tbody tr {
+    cursor: pointer;
+}
+
+.disass tbody tr:hover {
+    background-color: var(--theme-selected-bg);
+}
+
+.disass tbody tr.bp-armed {
+    background-color: var(--color-msjc-red);
+}
+
+.disass tbody tr.bp-armed td,
+.disass tbody tr.bp-armed span {
+    color: #fff;
+}
+
+.disass tbody tr.bp-armed.current {
+    outline: 2px solid var(--theme-dis-current-border);
+    outline-offset: -2px;
+}
+
 .disass td {
     text-align: left;
     padding-right: 1rem;
@@ -455,6 +477,31 @@ body {
     z-index: -2;
     background-color: var(--theme-editor-error-bg);
     color: var(--theme-editor-error-fg);
+}
+
+/* Debug session: current line + breakpoints, same manual-DOM situation as
+   the line errors above - these classes get toggled directly on the
+   library's own .pce-line elements, not through Svelte's templating. */
+.pce-line.editor__currentline {
+    background-color: var(--theme-dis-current-bg);
+    outline: 1px solid var(--theme-dis-current-border);
+    outline-offset: -1px;
+}
+
+/* Breakpoint marker: the line number badged in a red hexagon, like a stop
+   sign. The extra .prism-code-editor qualifier is needed to outweigh the
+   library's own same-specificity ".show-line-numbers .pce-line:before"
+   color rule. */
+.prism-code-editor .pce-line.editor__bp-armed:before {
+    background-color: var(--color-msjc-red);
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%);
+}
+
+.pce-line.editor__bp-armed.editor__currentline {
+    background-color: var(--color-msjc-red);
 }
 
 /**

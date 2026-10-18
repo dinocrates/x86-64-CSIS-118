@@ -12,6 +12,36 @@ let elem;
 let first_line = "";
 let disassebly_fail = false;
 
+// addresses (numbers) with a breakpoint currently armed
+let breakpoints = new Set();
+let last_load_generation = -1;
+
+function rowAddr(tr) {
+	const cell = tr.querySelector(".addr");
+	if (!cell) return null;
+	const v = parseInt(cell.textContent.trim(), 16);
+	return Number.isNaN(v) ? null : v;
+}
+
+function applyBreakpointMarkers() {
+	if (!elem) return;
+	for (const tr of elem.children) {
+		const addr = rowAddr(tr);
+		tr.classList.toggle("bp-armed", addr !== null && breakpoints.has(addr));
+	}
+}
+
+function handleDisassClick(e) {
+	const tr = e.target.closest("tr");
+	if (!tr || !elem || !elem.contains(tr)) return;
+	const addr = rowAddr(tr);
+	if (addr === null) return;
+	const isSet = blink.toggleBreakpoint(addr);
+	if (isSet) breakpoints.add(addr);
+	else breakpoints.delete(addr);
+	applyBreakpointMarkers();
+}
+
 function getFirstLine(mem, startPtr, line_len) {
 	let str = "";
 	for (let j = 0; j < line_len; j++) {
@@ -98,9 +128,19 @@ function updateDis() {
 		disassebly_fail = false;
 	}
 
+	// a fresh program load clears breakpoints on the C side too; reset our
+	// own markers in step rather than relying on the disassembly buffer
+	// (which also redraws on plain view-scrolling within the same program).
+	const load_generation = blink.getLoadGeneration();
+	if (load_generation !== last_load_generation) {
+		last_load_generation = load_generation;
+		breakpoints = new Set();
+	}
+
 	let current_first_line = getFirstLine(mem, startPtr, line_len);
 	if (current_first_line === first_line) {
 		scrollRip(elem, current_line);
+		applyBreakpointMarkers();
 	} else {
 		first_line = current_first_line;
 		// -----------------
@@ -118,6 +158,7 @@ function updateDis() {
 		}
 		elem.innerHTML = str;
 		scrollRip(elem, current_line);
+		applyBreakpointMarkers();
 	}
 }
 
@@ -140,7 +181,7 @@ onMount(async () => {
     </div>
   {/if}
   <table>
-    <tbody bind:this={elem} >
+    <tbody bind:this={elem} on:click={handleDisassClick}>
       {#each Array(100) as _}
         <tr>
           <td class="addr">0000000</td>

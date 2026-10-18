@@ -32,7 +32,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 			<Pane defaultSize={65} class="pf__pane">
 				<PaneGroup direction="horizontal" class="pf__panegroup pf__panegroup--horizontal">
 
-					<CollapsiblePane title="Disassembly" defaultSize={35} minSize={15} defaultCollapsed={true}>
+					<CollapsiblePane title="Disassembly" defaultSize={35} minSize={15} defaultCollapsed={false}>
 						<Disassembler />
 					</CollapsiblePane>
 

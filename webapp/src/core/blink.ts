@@ -624,8 +624,18 @@ export class Blink {
 	 * options.autorun (default true): when false, a successful
 	 * assemble+link stops at PROGRAM_LOADED without running the program.
 	 * Used by the Check My Work test runner.
+	 *
+	 * options.withListing (default false, NASM_trunk only): additionally
+	 * passes `-l /program.lst` to the assembler, so a source-line debug map
+	 * can be built afterward (see core/sourceMap.ts). This costs real extra
+	 * assembly time (NASM's debug-info/listing code path is slow under
+	 * blink's interpreter - seconds, not milliseconds), so it's opt-in and
+	 * only used for the Debug entry point, not quick compiles/runs.
 	 */
-	loadASM(asmString: string, options?: { autorun?: boolean }): boolean {
+	loadASM(
+		asmString: string,
+		options?: { autorun?: boolean; withListing?: boolean },
+	): boolean {
 		if (this.state === this.states.NOT_READY) {
 			return false;
 		}
@@ -637,13 +647,13 @@ export class Blink {
 		const FS = this.Module.FS;
 		FS.writeFile("/assembly.s", asmString);
 		FS.writeFile("/csis118b.inc", csis118bInc);
+		const withListing = (options?.withListing ?? false) && this.mode.id === "NASM_trunk";
+		const assemblerCommands = withListing
+			? `${this.mode.binaries.assembler.commands} -l /program.lst`
+			: this.mode.binaries.assembler.commands;
 		//this hack ensures that the function is called after a browser render pass
 		requestAnimationFrame(() => {
-			this.#setEmulationArgs(
-				"/assembler",
-				this.mode.binaries.assembler.commands,
-				"",
-			);
+			this.#setEmulationArgs("/assembler", assemblerCommands, "");
 			this.Module._blinkenlib_run_fast();
 		});
 	}
@@ -785,6 +795,29 @@ export class Blink {
 
 	continue() {
 		this.Module._blinkenlib_continue();
+	}
+
+	/**
+	 * Toggles a breakpoint at the given guest instruction address.
+	 * Returns true if a breakpoint is now set there, false if it was removed.
+	 * Breakpoints are address-based and are cleared automatically whenever
+	 * a new program is loaded (recompiling, starti, etc.) since addresses
+	 * from a previous load aren't meaningful anymore.
+	 */
+	toggleBreakpoint(addr: number): boolean {
+		return !!this.Module._blinkenlib_toggle_breakpoint(addr);
+	}
+
+	/**
+	 * Increments every time a program is freshly loaded (compiling, starti,
+	 * etc. - anything that calls setupProgram() on the C side, which is also
+	 * when breakpoints get cleared there). UI code can compare this against
+	 * a previously-seen value to know when to reset its own breakpoint
+	 * markers, as opposed to e.g. the disassembly view just scrolling within
+	 * the same program.
+	 */
+	getLoadGeneration(): number {
+		return this.Module._blinkenlib_get_load_generation();
 	}
 
 	setready() {

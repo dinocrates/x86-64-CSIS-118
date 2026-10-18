@@ -12,6 +12,7 @@ import EditorTextSize from "./EditorTextSize.svelte";
 import ThemeSelector from "./ThemeSelector.svelte";
 import { assignmentDetailsCollapsed } from "../core/displayPreferences";
 import { blinkStore, state } from "../core/store";
+import { parseNasmListing, findEntryPointOffset, DebugSourceMap, debugSourceMap } from "../core/sourceMap";
 import ControlsCompilebt from "./ControlsCompilebt.svelte";
 
 let blink = blinkStore.getInstance();
@@ -23,6 +24,7 @@ let showControls = false;
 let canstart = false;
 let canstep = false;
 let cancompile = false;
+let candebug = false;
 
 $: showControls = !mobile || !showEditor;
 
@@ -37,6 +39,10 @@ $: cancompile =
 	$blinkStore.state !== blink.states.ASSEMBLING &&
 	$blinkStore.state !== blink.states.LINKING;
 
+// Debug builds its own copy (with a source map) on click, so unlike Run it
+// doesn't need a prior successful compile - just blink being ready at all.
+$: candebug = cancompile;
+
 $: showLoadingBar =
 	$blinkStore.state === blink.states.NOT_READY ||
 	$blinkStore.state === blink.states.ASSEMBLING ||
@@ -48,6 +54,62 @@ $: showLoadingBar =
 function handle_back() {
 	blink.setready();
 	blinkStore.setUploadedElfName("");
+}
+
+function waitForState(states) {
+	return new Promise((resolve) => {
+		const check = () => {
+			if (states.includes(blink.state)) resolve(blink.state);
+			else requestAnimationFrame(check);
+		};
+		check();
+	});
+}
+
+/**
+ * Debug always (re)assembles from the current editor content, so it works
+ * even if nothing has been compiled yet. For NASM it also builds a
+ * NASM listing (slow - see blink.ts loadASM) to map source lines to
+ * addresses, so the editor can highlight the current line and take
+ * breakpoints directly, not just the Disassembly panel.
+ */
+async function handle_debug() {
+	debugSourceMap.set(null);
+	blink.loadASM($blinkStore.editorContent_read, {
+		autorun: false,
+		withListing: true,
+	});
+	const finalState = await waitForState([
+		blink.states.PROGRAM_LOADED,
+		blink.states.READY,
+	]);
+	if (finalState !== blink.states.PROGRAM_LOADED) {
+		// assemble/link failed; existing error UI already surfaces this.
+		return;
+	}
+	let listingText = null;
+	if (blink.mode.id === "NASM_trunk") {
+		try {
+			listingText = new TextDecoder().decode(
+				blink.Module.FS.readFile("/program.lst"),
+			);
+		} catch (e) {
+			console.warn("debug: no listing produced", e);
+		}
+	}
+	blink.starti();
+	if (listingText) {
+		const entryOffset = findEntryPointOffset(listingText);
+		if (entryOffset !== null) {
+			const entryAddr = Number(blink.m.readU64("rip"));
+			const textBase = entryAddr - entryOffset;
+			const mapped = parseNasmListing(listingText).map((e) => ({
+				line: e.line,
+				addr: textBase + e.offset,
+			}));
+			debugSourceMap.set(new DebugSourceMap(mapped));
+		}
+	}
 }
 </script>
 
@@ -110,8 +172,8 @@ function handle_back() {
 
       <div class="btgroup">
         <button class="btgroup__button"
-          on:click={()=>blink.starti()}
-          disabled={!canstart} >
+          on:click={handle_debug}
+          disabled={!candebug} >
           Debug
         </button>
         <button class="btgroup__button"
