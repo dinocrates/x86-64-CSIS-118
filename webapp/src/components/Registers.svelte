@@ -154,6 +154,13 @@ let eflags = [
 	},
 ];
 
+// sys_exit's syscall number (Linux x86-64). exit_program (from csis118b.inc)
+// always does `mov rax, 60` immediately before the `syscall` that ends the
+// process, so once the program has fully stopped, rax holding exactly this
+// value means it's showing that bookkeeping, not the student's own code.
+const SYS_EXIT = 60n;
+let showPostExitNote = false;
+
 function updateRegisters() {
 	if (
 		!(
@@ -175,6 +182,12 @@ function updateRegisters() {
 	}
 	//force svelte rendering
 	registers = registers;
+
+	const rax = registers.find((reg) => reg.name.trim() === "rax");
+	showPostExitNote =
+		blink.state === blink.states.PROGRAM_STOPPED &&
+		!!rax &&
+		rax.value === SYS_EXIT;
 
 	eflagsStr = blink.m.stringReadU64("flags");
 	const new_eflagsBytes = blink.m.readU64("flags");
@@ -212,6 +225,12 @@ $: $manual_render && updateRegisters();
         >{b.label}</button>
       {/each}
     </div>
+    {#if showPostExitNote}
+      <p class="postexit-note">
+        Program exited: RAX now holds the exit syscall number (60), not your program's last value.
+        Use Debug + Step to inspect registers before the <code>exit</code> call.
+      </p>
+    {/if}
 {#each registers as r}
     {@const key = r.name.trim()}
     {@const hasFamily = !!REGISTER_FAMILIES[key]}
@@ -309,6 +328,20 @@ $: $manual_render && updateRegisters();
   color: var(--theme-text-fg-contrasting);
   background-color: var(--theme-selected-bg);
   border-color: var(--theme-focus);
+}
+
+.postexit-note {
+  margin: 0 0 0.5rem 0;
+  padding: 0.35rem 0.5rem;
+  background-color: var(--theme-hint-bg);
+  border: 1px solid var(--theme-hint-border);
+  border-radius: 4px;
+  color: var(--color-gold-50);
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+}
+.postexit-note code {
+  font-family: var(--code-font-family);
 }
 
 .regname-btn {
