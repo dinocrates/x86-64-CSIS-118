@@ -29,7 +29,11 @@ let rendered_errors = [];
 let blink = blinkStore.getInstance()
 
 // ---- debug-session gutter: current-line highlight + breakpoints ----
-let breakpoint_lines = new Set(); // 1-indexed source line numbers
+// breakpoint_lines holds the student's *intent* - 1-indexed source lines
+// they want to break on - and persists across compiles/edits, Visual
+// Studio-style. It can be set before Debug is ever clicked; it's only
+// translated into real, armed addresses once a source map exists.
+let breakpoint_lines = new Set();
 let last_bp_load_generation = -1;
 let current_debug_line = null;
 
@@ -48,15 +52,32 @@ function applyBreakpointMarkers() {
   }
 }
 
+// A fresh program load clears the C-side breakpoint registry too (see
+// Disassembler.svelte for the same pattern) - so every pending line needs
+// re-arming against the new addresses. Lines that no longer resolve to
+// real code (e.g. deleted, or never did - a blank line marked before the
+// first compile) get pruned, so the UI doesn't show a marker that can't
+// actually fire.
+function rearmPendingBreakpoints() {
+  if (!$debugSourceMap) return;
+  const stillValid = new Set();
+  for (const line of breakpoint_lines) {
+    const addr = $debugSourceMap.addressForLine(line);
+    if (addr !== null) {
+      blink.toggleBreakpoint(addr); // registry was just cleared, so this arms it
+      stillValid.add(line);
+    }
+  }
+  breakpoint_lines = stillValid;
+}
+
 function updateDebugUI() {
   if (!editor || !blink.m) return;
 
-  // a fresh program load clears breakpoints on the C side too (see
-  // Disassembler.svelte for the same pattern); keep our markers in sync.
   const gen = blink.getLoadGeneration();
   if (gen !== last_bp_load_generation) {
     last_bp_load_generation = gen;
-    breakpoint_lines = new Set();
+    rearmPendingBreakpoints();
   }
   applyBreakpointMarkers();
 
@@ -88,8 +109,11 @@ $: $manual_render && updateDebugUI();
 // real DOM element of its own (the number is CSS content on .pce-line),
 // and that .pce-line box is pointer-events:none (only the textarea that
 // overlays the whole line is interactive) - so hit-testing is done by
-// geometry: which line's rect contains the pointer, and is it left of the
-// textarea's own computed padding (which exactly matches the gutter width).
+// geometry: which line's rect contains the pointer, and is it in the
+// gutter band to the left of it. .pce-line has margin-left equal to the
+// gutter width (see layout.css), so rect.left is where the CODE starts,
+// not the gutter - the gutter itself is the band *before* rect.left, with
+// the line number rendered there via a negative-margin ::before.
 function hitTestGutter(clientX, clientY) {
   if (!editor) return null;
   const textarea = editor_elem.querySelector('textarea');
@@ -99,22 +123,34 @@ function hitTestGutter(clientX, clientY) {
   for (let i = 1; i < lines.length; i++) {
     const rect = lines[i].getBoundingClientRect();
     if (clientY >= rect.top && clientY < rect.bottom) {
-      return { lineIndex: i, inGutter: clientX - rect.left < gutterPx };
+      return { lineIndex: i, inGutter: clientX >= rect.left - gutterPx && clientX < rect.left };
     }
   }
   return null;
 }
 
 function handleGutterMousedown(e) {
-  if (!editor || !$debugSourceMap) return;
+  if (!editor) return;
   const hit = hitTestGutter(e.clientX, e.clientY);
   if (!hit || !hit.inGutter) return;
-  const addr = $debugSourceMap.addressForLine(hit.lineIndex);
-  if (addr === null) return;
-  e.preventDefault();
-  const isSet = blink.toggleBreakpoint(addr);
-  if (isSet) breakpoint_lines.add(hit.lineIndex);
-  else breakpoint_lines.delete(hit.lineIndex);
+  const line = hit.lineIndex;
+
+  if ($debugSourceMap) {
+    // actively debugging: only take breakpoints on lines we know are real
+    // code, and arm them for real immediately.
+    const addr = $debugSourceMap.addressForLine(line);
+    if (addr === null) return;
+    e.preventDefault();
+    const isSet = blink.toggleBreakpoint(addr);
+    if (isSet) breakpoint_lines.add(line);
+    else breakpoint_lines.delete(line);
+  } else {
+    // not debugging yet - Visual Studio-style: just record the intent.
+    // It's resolved and actually armed once Debug runs (rearmPendingBreakpoints).
+    e.preventDefault();
+    if (breakpoint_lines.has(line)) breakpoint_lines.delete(line);
+    else breakpoint_lines.add(line);
+  }
   applyBreakpointMarkers();
 }
 
@@ -125,9 +161,13 @@ function handleGutterMousedown(e) {
 function handleEditorMousemove(e) {
   const textarea = editor_elem && editor_elem.querySelector('textarea');
   if (!textarea) return;
-  const hit = $debugSourceMap && hitTestGutter(e.clientX, e.clientY);
-  const clickable =
-    hit && hit.inGutter && $debugSourceMap.addressForLine(hit.lineIndex) !== null;
+  const hit = hitTestGutter(e.clientX, e.clientY);
+  let clickable = !!(hit && hit.inGutter);
+  // once a source map exists we know exactly which lines are real code;
+  // before that (not debugging yet) any line can take a pending breakpoint.
+  if (clickable && $debugSourceMap) {
+    clickable = $debugSourceMap.addressForLine(hit.lineIndex) !== null;
+  }
   textarea.style.cursor = clickable ? 'pointer' : '';
 }
 
@@ -163,9 +203,12 @@ function renderEditor(){
     highlightSelectionMatches(),
     defaultCommands(),
   )
-  //annoying but required since this editor is trapping focus, causing
-  //a11y issues
-  setIgnoreTab(true)
+  // Tab inserts indentation, like every real code editor, instead of the
+  // browser default of moving focus off the textarea. Ctrl+M (the
+  // library's own built-in shortcut) toggles this back off, so Tab moves
+  // focus again - the escape hatch for keyboard-only users who'd otherwise
+  // get stuck unable to leave the editor.
+  setIgnoreTab(false)
 }
 
 function removeErrors(){
