@@ -1,0 +1,13 @@
+diff --git a/node_modules/prism-code-editor/dist/prism/languages/nasm.js b/node_modules/prism-code-editor/dist/prism/languages/nasm.js
+index 4e0c958..0e2ce2c 100644
+--- a/node_modules/prism-code-editor/dist/prism/languages/nasm.js
++++ b/node_modules/prism-code-editor/dist/prism/languages/nasm.js
+@@ -10,7 +10,7 @@ languages.nasm = {
+   "keyword": [
+     /\[?BITS (?:16|32|64)\]?/,
+     {
+-      pattern: /(^\s*)section\s*[a-z.]+:?/im,
++      pattern: /(^\s*)section[\t ]*[a-z.]+:?/im,
+       lookbehind: true
+     },
+     /(?:extern|global)[^\n;]*/i,
