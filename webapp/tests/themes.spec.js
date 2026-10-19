@@ -121,7 +121,7 @@ test('theme switching keeps the paused debugger intact and themes live disassemb
   await page.getByRole('button', { name: 'compile', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Debug', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Debug', exact: true }).click();
-  await page.getByRole('button', { name: /Expand Disassembly/i }).click();
+  // Disassembly is expanded by default now (needed to set breakpoints there).
   await page.getByRole('button', { name: /Expand Stack memory/i }).click();
   const current = page.locator('.disass tr.current');
   await expect(current).toBeVisible();

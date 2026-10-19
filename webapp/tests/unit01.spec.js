@@ -270,7 +270,7 @@ test('Debug and Step observe RBX immediately after main load; checks leave pause
   await page.getByRole('button', { name: 'compile', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Debug', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Debug', exact: true }).click();
-  await page.getByRole('button', { name: /Expand Disassembly/i }).click();
+  // Disassembly is expanded by default now (needed to set breakpoints there).
   const current = page.locator('.disass tr.current');
   for (let steps = 0; steps < 12; steps++) {
     if (/mov\s+(?:e|r)bx,\s*0x2a/i.test(await current.innerText())) break;
@@ -278,7 +278,10 @@ test('Debug and Step observe RBX immediately after main load; checks leave pause
   }
   await expect(current).toContainText(/mov\s+(?:e|r)bx,\s*0x2a/i);
   await page.getByRole('button', { name: 'Step', exact: true }).click();
-  await expect(page.locator('.registers p').filter({ has: page.locator('.name', { hasText: /^rbx$/ }) })).toContainText('0x2a');
+  // Registers with a sub-register breakdown (rax, rbx, ...) now render their
+  // name as a button prefixed with a collapse/expand chevron (see
+  // Registers.svelte), so match that optional leading glyph too.
+  await expect(page.locator('.registers p').filter({ has: page.locator('.name', { hasText: /^[▸▾]?rbx$/ }) })).toContainText('0x2a');
   const checkpoint = await current.innerText();
   const source = await editor(page).inputValue();
   await check(page);
