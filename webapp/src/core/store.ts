@@ -273,6 +273,9 @@ function createBlinkStore(){
       //changes to mode require manual updates to the blink object
       blink.setMode(assemblers[mode])
     },
+    clearTerminal(){
+      update((store) => ({...store, term_buffer: ""}))
+    },
   }
 
 }

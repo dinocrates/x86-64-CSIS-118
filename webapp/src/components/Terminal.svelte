@@ -48,7 +48,7 @@ $: ($term_buffer || $state) && scroll();
     flex-grow: 1;
   }
   .term code {
-    font-size: .9rem;
+    font-size: var(--debug-panel-font-size, .9rem);
     text-align: left;
     white-space: pre;
     word-spacing: normal;

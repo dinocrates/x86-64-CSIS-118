@@ -46,15 +46,18 @@
     <div class="pane">
       <div class="pane__bar">
         <p>{title}</p>
-        <button
-          type="button"
-          class="pane__collapsebt"
-          on:click={() => pane?.collapse()}
-          aria-label={`Collapse ${title} panel`}
-          title={`Collapse ${title} panel`}
-        >
-          <span aria-hidden="true">&minus;</span>
-        </button>
+        <div class="pane__bar-actions">
+          <slot name="actions" />
+          <button
+            type="button"
+            class="pane__collapsebt"
+            on:click={() => pane?.collapse()}
+            aria-label={`Collapse ${title} panel`}
+            title={`Collapse ${title} panel`}
+          >
+            <span aria-hidden="true">&minus;</span>
+          </button>
+        </div>
       </div>
       <div class="pane__content">
         <slot />

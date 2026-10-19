@@ -303,6 +303,13 @@ body {
     height: 100%;
 }
 
+.pane__bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
 /** Collapsible pane
  * Used by CollapsiblePane.svelte for panels (Disassembly, Stack memory)
  * that can shrink down to a labeled bar.
@@ -371,7 +378,7 @@ body {
     padding: .5rem;
     padding-left: 0;
     font-family: var(--code-font-family);
-    font-size: .9rem;
+    font-size: var(--debug-panel-font-size, .9rem);
     overflow-x: auto;
 }
 

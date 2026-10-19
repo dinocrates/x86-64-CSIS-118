@@ -286,7 +286,7 @@ $: $manual_render && updateRegisters();
   padding-left: 1rem;
 
   font-family: var(--code-font-family);
-  font-size: .9rem;
+  font-size: var(--debug-panel-font-size, .9rem);
 }
 .registers p{
   margin: 0;

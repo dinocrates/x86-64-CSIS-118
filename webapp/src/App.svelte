@@ -1,11 +1,19 @@
 <script lang="ts">
 import './styles/style.css';
 import './styles/themes.css';
-import { themeMode } from './core/displayPreferences';
+import { themeMode, debugPanelFontSize } from './core/displayPreferences';
 
 // Apply the stored theme to the document so portalled menus and dialogs
 // inherit it too. Switching themes never recreates the editor or emulator.
 $: document.documentElement.dataset.theme = $themeMode;
+
+// Registers/Disassembly/Stack memory/Terminal all read this one CSS
+// variable, rather than each binding it individually, so any of their
+// text-size controls (same store) stays in sync everywhere at once.
+$: document.documentElement.style.setProperty(
+  '--debug-panel-font-size',
+  $debugPanelFontSize + 'px',
+);
 import DesktopLayout from './DesktopLayout.svelte';
 import MobileLayout from './MobileLayout.svelte';
 

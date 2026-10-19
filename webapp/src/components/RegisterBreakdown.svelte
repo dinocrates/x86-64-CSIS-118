@@ -86,7 +86,10 @@ $: wVal = value & 0xffffn; // e.g. ax
 <style>
 .regbreak {
 	font-family: var(--code-font-family);
-	font-size: 0.7rem;
+	/* tracks the shared debug-panel text size, kept slightly denser than
+	   the main register list's own 0.9rem-equivalent size, same ratio as
+	   the original fixed 0.7rem/0.9rem sizing */
+	font-size: calc(var(--debug-panel-font-size, 0.9rem) * 0.78);
 	line-height: 1.25;
 	padding: 0.25rem 0.2rem 0.35rem;
 }
@@ -121,11 +124,11 @@ $: wVal = value & 0xffffn; // e.g. ax
 }
 .seg__sub {
 	opacity: 0.75;
-	font-size: 0.6rem;
+	font-size: 0.86em;
 	white-space: nowrap;
 }
 .seg__val {
-	font-size: 0.65rem;
+	font-size: 0.93em;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -151,7 +154,7 @@ $: wVal = value & 0xffffn; // e.g. ax
 .bracket {
 	position: relative;
 	text-align: center;
-	font-size: 0.6rem;
+	font-size: 0.86em;
 	padding-top: 0.3rem;
 	color: var(--theme-text-fg-disabled);
 }

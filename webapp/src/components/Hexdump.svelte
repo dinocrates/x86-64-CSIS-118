@@ -146,7 +146,7 @@ let hoveredIndex = -1;
 
     color: var(--code-font-color);
     font-family: var(--code-font-family);
-    font-size: 0.9rem;
+    font-size: var(--debug-panel-font-size, 0.9rem);
   }
   .hexdump--center {
     justify-content: center;

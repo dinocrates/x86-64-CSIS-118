@@ -7,6 +7,8 @@ import Disassembler from './components/Disassembler.svelte';
 import Terminal from './components/Terminal.svelte';
 import Controls from './components/Controls.svelte';
 import CollapsiblePane from './components/CollapsiblePane.svelte';
+import DebugPanelTextSize from './components/DebugPanelTextSize.svelte';
+import TerminalClearButton from './components/TerminalClearButton.svelte';
 
 </script>
 
@@ -33,6 +35,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 				<PaneGroup direction="horizontal" class="pf__panegroup pf__panegroup--horizontal">
 
 					<CollapsiblePane title="Disassembly" defaultSize={35} minSize={15} defaultCollapsed={false}>
+						<DebugPanelTextSize slot="actions" />
 						<Disassembler />
 					</CollapsiblePane>
 
@@ -41,6 +44,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 						<div class="pane">
 							<div class="pane__bar">
 								<p>Registers</p>
+								<DebugPanelTextSize />
 							</div>
 							<div class="pane__content">
 								<Registers />
@@ -51,6 +55,7 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 					<PaneResizer class="pf__resizer pf__resizer--vertical" />
 
 					<CollapsiblePane title="Stack memory" defaultSize={35} minSize={15} defaultCollapsed={true}>
+						<DebugPanelTextSize slot="actions" />
 						<Hexdump />
 					</CollapsiblePane>
 
@@ -64,6 +69,10 @@ import CollapsiblePane from './components/CollapsiblePane.svelte';
 				<div class="pane">
 					<div class="pane__bar">
 						<p>Terminal</p>
+						<div class="pane__bar-actions">
+							<TerminalClearButton />
+							<DebugPanelTextSize />
+						</div>
 					</div>
 					<div class="pane__content">
 						<Terminal/>

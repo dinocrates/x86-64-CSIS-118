@@ -129,7 +129,7 @@ test('video display controls preserve code and results, persist on refresh, and 
   await expect(size).toHaveValue('24');
   await size.selectOption('12');
   await expect(page.getByRole('button', { name: 'Decrease editor text size' })).toBeDisabled();
-  await size.selectOption('40');
+  await size.selectOption('72');
   await expect(page.getByRole('button', { name: 'Increase editor text size' })).toBeDisabled();
   await size.selectOption('24');
 
