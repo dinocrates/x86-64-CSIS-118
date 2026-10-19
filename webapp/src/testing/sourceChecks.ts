@@ -68,6 +68,42 @@ function patternMatches(pattern: string, text: string): boolean {
 	}
 }
 
+const NASM_INT_LITERAL_RE = /^(0[bB]|0[xX]|0[oO])([0-9a-fA-F_]+)$/;
+
+/** Parse a NASM 0b/0x/0o literal (underscores allowed) to its base and value. */
+function parseNasmIntLiteral(raw: string): { prefix: "0b" | "0x" | "0o"; value: number } | null {
+	const m = NASM_INT_LITERAL_RE.exec(raw);
+	if (!m) return null;
+	const prefix = m[1].toLowerCase() as "0b" | "0x" | "0o";
+	const digits = m[2].replace(/_/g, "");
+	const base = prefix === "0b" ? 2 : prefix === "0x" ? 16 : 8;
+	const validDigits = base === 2 ? /^[01]+$/ : base === 16 ? /^[0-9a-fA-F]+$/ : /^[0-7]+$/;
+	if (!digits || !validDigits.test(digits)) return null;
+	return { prefix, value: parseInt(digits, base) };
+}
+
+/**
+ * True if de-commented source has an active `mov <register>, <literal>`
+ * where <literal> is a <prefix>-notated literal parsing to decimalValue.
+ * A commented-out example is excluded because the source is de-commented
+ * first (stripComments removes everything from ';' to end of line).
+ */
+function hasLiteralLoad(
+	decommented: string,
+	register: string,
+	prefix: "0b" | "0x" | "0o",
+	decimalValue: number,
+): boolean {
+	const escapedRegister = register.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const re = new RegExp(`\\bmov\\s+${escapedRegister}\\s*,\\s*([0-9a-zA-Z_]+)`, "gi");
+	let match: RegExpExecArray | null;
+	while ((match = re.exec(decommented))) {
+		const parsed = parseNasmIntLiteral(match[1]);
+		if (parsed && parsed.prefix === prefix && parsed.value === decimalValue) return true;
+	}
+	return false;
+}
+
 /** Narrow formative scanner, not a NASM parser: mask literals and comments
  * while preserving lines. Only backtick strings have NASM backslash escapes.
  * Includes are deliberately not expanded; library sections do not count. */
@@ -92,13 +128,19 @@ function studentCodeTokens(source: string): string {
 }
 
 export function checkStudentOrganization(source: string, test: SourceCheckTest): string[] {
-	if (!test.requiredDataLabels && !test.studentSectionCounts) return [];
+	if (!test.requiredDataLabels && !test.requiredDwordVariables && !test.studentSectionCounts) return [];
 	const tokens = studentCodeTokens(source);
 	const problems: string[] = [];
-	const definitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][bB])\b/gm)];
+	const dbDefinitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][bB])\b/gm)];
 	for (const label of test.requiredDataLabels ?? []) {
-		if (definitions.filter((definition) => definition[1] === label).length !== 1) {
+		if (dbDefinitions.filter((definition) => definition[1] === label).length !== 1) {
 			problems.push(`Define \`${label}\` once as its own db string in section .data. A colon before db is optional.`);
+		}
+	}
+	const ddDefinitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][dD])\b/gm)];
+	for (const label of test.requiredDwordVariables ?? []) {
+		if (ddDefinitions.filter((definition) => definition[1] === label).length !== 1) {
+			problems.push(`Define \`${label}\` once as its own dd (DWORD) variable. A colon before dd is optional.`);
 		}
 	}
 	if (test.studentSectionCounts) {
@@ -127,6 +169,7 @@ export function runSourceCheckTest(
 ): AssignmentSingleTestResult {
 	const problems: string[] = [];
 	problems.push(...checkStudentOrganization(source, test));
+	const decommented = stripComments(source);
 
 	for (const label of test.requiredLabels ?? []) {
 		if (!hasLabel(source, label)) {
@@ -141,7 +184,20 @@ export function runSourceCheckTest(
 			problems.push(`Your code is missing something this assignment requires (pattern: ${pattern}).`);
 		}
 	}
-	const decommented = stripComments(source);
+	for (const pattern of test.requiredActivePatterns ?? []) {
+		if (!patternMatches(pattern, decommented)) {
+			problems.push(`Your active code is missing something this assignment requires (pattern: ${pattern}).`);
+		}
+	}
+	if (test.requiredLiteralLoad) {
+		const { register, prefix, decimalValue } = test.requiredLiteralLoad;
+		if (!hasLiteralLoad(decommented, register, prefix, decimalValue)) {
+			problems.push(
+				`An active \`mov ${register}, ${prefix}...\` literal loading decimal ${decimalValue} was not found. ` +
+					`Check the ${prefix} prefix and the exact value.`,
+			);
+		}
+	}
 	for (const pattern of test.bannedPatterns ?? []) {
 		if (patternMatches(pattern, decommented)) {
 			problems.push(

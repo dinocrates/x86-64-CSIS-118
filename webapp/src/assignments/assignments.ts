@@ -5,6 +5,12 @@ import { unit01Instructions } from "./instructions/unit01";
 import { unit02MovieShowcaseStarter } from "./starters/unit02_movie_showcase.asm";
 import { unit02MovieShowcaseTests } from "./tests/unit02_movie_showcase.tests";
 import { unit02MovieShowcaseInstructions } from "./instructions/unit02_movie_showcase";
+import { unit03Lab3aRegistersStarter } from "./starters/unit03_lab3a_registers.asm";
+import { unit03Lab3aRegistersTests } from "./tests/unit03_lab3a_registers.tests";
+import { unit03Lab3aRegistersInstructions } from "./instructions/unit03_lab3a_registers";
+import { unit03Lab3bVariablesStarter } from "./starters/unit03_lab3b_variables.asm";
+import { unit03Lab3bVariablesTests } from "./tests/unit03_lab3b_variables.tests";
+import { unit03Lab3bVariablesInstructions } from "./instructions/unit03_lab3b_variables";
 
 /**
  * The CSIS-118B assignment list.
@@ -52,7 +58,42 @@ export const unit02MovieShowcaseAssignment: AssignmentConfig = {
 	],
 };
 
-export const assignments: AssignmentConfig[] = [unit01HelloAssignment, unit02MovieShowcaseAssignment];
+export const unit03Lab3aRegistersAssignment: AssignmentConfig = {
+	id: "unit03-lab3a-registers",
+	title: "Unit 03 Lab 3A — General Purpose Registers",
+	unit: "Unit 3",
+	description: "Load literals written in binary, hexadecimal, and octal into EAX and print their decimal values. 30 points, graded by your instructor.",
+	starterCode: unit03Lab3aRegistersStarter,
+	tests: unit03Lab3aRegistersTests,
+	instructions: unit03Lab3aRegistersInstructions,
+	submissionMode: "file-upload",
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+	],
+};
+
+export const unit03Lab3bVariablesAssignment: AssignmentConfig = {
+	id: "unit03-lab3b-variables",
+	title: "Unit 03 Lab 3B — Creating Variables",
+	unit: "Unit 3",
+	description: "Read two integers, store them in DWORD variables, calculate their difference, and swap the values using registers and MOV. 30 points, graded by your instructor.",
+	starterCode: unit03Lab3bVariablesStarter,
+	tests: unit03Lab3bVariablesTests,
+	instructions: unit03Lab3bVariablesInstructions,
+	submissionMode: "file-upload",
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+	],
+};
+
+export const assignments: AssignmentConfig[] = [
+	unit01HelloAssignment,
+	unit02MovieShowcaseAssignment,
+	unit03Lab3aRegistersAssignment,
+	unit03Lab3bVariablesAssignment,
+];
 
 export function getAssignmentById(id: string | null): AssignmentConfig | null {
 	if (!id) return null;

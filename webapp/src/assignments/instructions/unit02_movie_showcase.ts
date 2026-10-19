@@ -51,4 +51,5 @@ export const unit02MovieShowcaseInstructions: AssignmentInstructions = {
 		"Program runs normally and prints the records in A, B, C order.",
 		"Header and comments are complete; source and output evidence are attached.",
 	],
+	manualReviewNote: "Movie A retention, movie accuracy, distinct choices for B and C, and documentation are reviewed by your instructor. Practice checks do not prove factual accuracy or originality.",
 };

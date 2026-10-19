@@ -188,6 +188,7 @@ test('starter launches, compiles, and runs; personalization and instructor rubri
   await expect(page.locator('#assignment-select')).toHaveValue(id);
   await expect(page.locator('#assignment-select option')).toHaveText([
     'Free practice — no assignment', 'Unit 1 — My First Assembly Program', 'Unit 2A — Movie Showcase',
+    'Unit 03 Lab 3A — General Purpose Registers', 'Unit 03 Lab 3B — Creating Variables',
   ]);
   const source = await editor(page).inputValue();
   await page.getByRole('button', { name: 'Instructions, submission, and grading · 30 points' }).click();

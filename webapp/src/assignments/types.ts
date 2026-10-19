@@ -29,6 +29,25 @@ export interface AssignmentInstructions {
 	submission: string[];
 	rubric: { criterion: string; points: number; description: string }[];
 	completionChecklist: string[];
+	/** Shown under the manual completion checklist; names this assignment's own instructor review items. */
+	manualReviewNote: string;
+	/** Selectable, read-only sample code and expected output, shown in their own code-block UI. */
+	codeExamples?: AssignmentCodeExample[];
+	/** Student support links shown alongside the directions (e.g. a discussion board, course chat). */
+	helpLinks?: { label: string; url: string }[];
+}
+
+/**
+ * A single selectable code sample shown in the instructions dialog, with
+ * optional sample input/output. Rendered read-only with NASM syntax
+ * highlighting; never presented as an in-app "solution" button.
+ */
+export interface AssignmentCodeExample {
+	title: string;
+	code: string;
+	/** Shown above `output` as what a student would type at each prompt. */
+	sampleInput?: string;
+	output?: string;
 }
 
 /** The x86-64 general purpose registers a test can set up or inspect. */
@@ -85,12 +104,32 @@ export interface SourceCheckTest extends BaseTest {
 	requiredLabels?: string[];
 	/** Separate named db definitions; NASM data-label colons are optional. */
 	requiredDataLabels?: string[];
+	/** Separate named dd (DWORD) definitions; NASM data-label colons are optional. */
+	requiredDwordVariables?: string[];
 	/** Opt-in lab organization check on student source before includes expand. */
 	studentSectionCounts?: { data: number; text: number };
-	/** Regex sources (or plain strings) that must NOT appear. */
+	/** Regex sources (or plain strings) that must NOT appear. Checked against de-commented source. */
 	bannedPatterns?: string[];
-	/** Regex sources (or plain strings) that must appear. */
+	/**
+	 * Regex sources (or plain strings) that must appear in the raw source.
+	 * Use this only to require something inside a comment (e.g. a header
+	 * line) — a commented-out example also satisfies this check.
+	 */
 	requiredPatterns?: string[];
+	/**
+	 * Regex sources (or plain strings) that must appear in active code.
+	 * Checked against de-commented source, so a commented-out example does
+	 * NOT satisfy this check. Prefer this over requiredPatterns whenever the
+	 * check is about what the program actually does.
+	 */
+	requiredActivePatterns?: string[];
+	/**
+	 * An active `mov <register>, <prefix><digits>` literal load whose parsed
+	 * numeric value equals `decimalValue`. Checked against de-commented
+	 * source; accepts any capitalization and NASM underscore digit
+	 * separators (e.g. 0b1010_1011). A commented-out example does not count.
+	 */
+	requiredLiteralLoad?: { register: string; prefix: "0b" | "0x" | "0o"; decimalValue: number };
 }
 
 /** Runs the full student program and compares captured stdout. */

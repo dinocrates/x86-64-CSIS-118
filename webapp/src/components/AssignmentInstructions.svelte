@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { AssignmentConfig } from '../assignments/types';
   import { createDialog } from '@melt-ui/svelte';
+  import { renderInline } from '../core/inlineCode';
+  import AssignmentCodeExample from './AssignmentCodeExample.svelte';
   export let assignment: AssignmentConfig;
   $: instructions = assignment.instructions;
   const {
@@ -26,17 +28,23 @@
           <p>{instructions.points} points · Graded by your instructor</p>
           <p>See the due date shown in Canvas</p>
           <h3>Learning objectives</h3>
-          <ol>{#each instructions.objectives as objective}<li>{objective}</li>{/each}</ol>
+          <ol>{#each instructions.objectives as objective}<li>{@html renderInline(objective)}</li>{/each}</ol>
+          {#if instructions.codeExamples?.length}
+            <h3>Examples</h3>
+            {#each instructions.codeExamples as example}
+              <AssignmentCodeExample {example} />
+            {/each}
+          {/if}
           <h3>Instructions</h3>
           <ol>
             {#each instructions.steps as step}
               <li><strong>{step.title}</strong>
-                {#each step.items as item}<p>{item}</p>{/each}
+                {#each step.items as item}<p>{@html renderInline(item)}</p>{/each}
               </li>
             {/each}
           </ol>
           <h3>{assignment.submissionMode === 'file-upload' ? 'Submission in Canvas File Upload' : 'Submission in Canvas Text Entry'}</h3>
-          <ul>{#each instructions.submission as item}<li>{item}</li>{/each}</ul>
+          <ul>{#each instructions.submission as item}<li>{@html renderInline(item)}</li>{/each}</ul>
           {#if assignment.submissionMode !== 'file-upload'}
             <p>The last three items are written responses in Canvas. Your downloaded .asm file is your saved copy. Screenshots are not required.</p>
           {/if}
@@ -44,12 +52,20 @@
           <p>Your instructor awards credit, including partial credit, using these criteria. Practice checks give feedback and do not award a numerical grade or guarantee full credit.</p>
           <ul>
             {#each instructions.rubric as row}
-              <li><strong>{row.criterion}: {row.points} points.</strong> {row.description}</li>
+              <li><strong>{row.criterion}: {row.points} points.</strong> {@html renderInline(row.description)}</li>
             {/each}
           </ul>
           <h3>Manual completion checklist</h3>
-          <ul>{#each instructions.completionChecklist as item}<li>{item}</li>{/each}</ul>
-          <p>{assignment.submissionMode === 'file-upload' ? 'Movie A retention, movie accuracy, distinct choices for B and C, and documentation are reviewed by your instructor. Practice checks do not prove factual accuracy or originality.' : 'Comment originality and accuracy, your debugging process, and written explanations are reviewed by your instructor.'}</p>
+          <ul>{#each instructions.completionChecklist as item}<li>{@html renderInline(item)}</li>{/each}</ul>
+          <p>{instructions.manualReviewNote}</p>
+          {#if instructions.helpLinks?.length}
+            <h3>Get help</h3>
+            <ul>
+              {#each instructions.helpLinks as link}
+                <li><a href={link.url} target="_blank" rel="noopener noreferrer">{link.label}</a></li>
+              {/each}
+            </ul>
+          {/if}
         </div>
       </div>
     </div>
@@ -69,4 +85,16 @@
   p { margin: 0.4rem 0; }
   ul, ol { padding-left: 1.4rem; }
   li { margin-bottom: 0.5rem; }
+  :global(.code-pill) {
+    background: #2b2b2b;
+    color: #f8f8f2;
+    font-family: var(--code-font-family, Consolas, "Liberation Mono", monospace);
+    font-size: 0.85em;
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    text-shadow: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    font-weight: 400 !important;
+  }
 </style>

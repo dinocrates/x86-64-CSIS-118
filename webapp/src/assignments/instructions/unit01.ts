@@ -60,4 +60,5 @@ export const unit01Instructions: AssignmentInstructions = {
 		"Save Lastname_Firstname_U01.asm and test your final share link in a new tab.",
 		"Prepare the three written responses and submit the link, output, and responses in Canvas Text Entry. Screenshots are not required.",
 	],
+	manualReviewNote: "Comment originality and accuracy, your debugging process, and written explanations are reviewed by your instructor.",
 };

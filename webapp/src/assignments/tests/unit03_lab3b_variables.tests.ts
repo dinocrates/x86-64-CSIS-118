@@ -1,0 +1,33 @@
+import type { AssignmentTest } from "../types";
+
+export const unit03Lab3bVariablesTests: AssignmentTest[] = [
+	{ id: "assemble", type: "assemble", name: "Code assembles and links successfully", visible: true,
+		hint: "Run the starter first. Check NASM diagnostics, spelling, and the course include." },
+	{ id: "variables-defined", type: "source-check", name: "Two DWORD variables are defined: first_value and second_value", visible: true,
+		requiredDwordVariables: ["first_value", "second_value"],
+		hint: "Rename the starter's sample_value to first_value, and add second_value: dd 0 as its own DWORD variable." },
+	{ id: "reads-and-stores", type: "source-check", name: "Each input is read with read_int and stored into its own DWORD variable", visible: true,
+		requiredLabels: ["main"],
+		requiredActivePatterns: [
+			"call\\s+read_int",
+			"mov\\s+dword\\s*\\[\\s*rel\\s+first_value\\s*\\]\\s*,\\s*(?:e[a-z]{2}|r\\d{1,2}d)\\b",
+			"mov\\s+dword\\s*\\[\\s*rel\\s+second_value\\s*\\]\\s*,\\s*(?:e[a-z]{2}|r\\d{1,2}d)\\b",
+		],
+		hint: "After each call read_int, store its 32-bit result immediately: mov dword [rel first_value], eax (and the matching store for second_value)." },
+	{ id: "signed-output-no-cheats", type: "source-check", name: "Signed DWORD values are widened for output; no xchg shortcut", visible: true,
+		requiredActivePatterns: ["movsxd\\s+rdi"],
+		bannedPatterns: ["\\bxchg\\b"],
+		hint: "Use movsxd rdi, dword [rel ...] (or movsxd rdi, eax) before call print_int, so negative values print correctly. This lab's swap uses only mov and temporary registers, not xchg." },
+	{ id: "stdout-18-5", type: "stdout", name: "Inputs 18 and 5 print the equation and swapped values", visible: true,
+		stdin: "18\n5", expectedStdout: "Input a number\nInput a number\n18 - 5 = 13\nAfter Swapping\nfirst variable: 5\nsecond variable: 18",
+		compareMode: "trimmed", expectedExitCode: 0,
+		hint: "Print the original first value, \" - \", the original second value, \" = \", and their difference. Then swap the variables and print the heading and both updated values." },
+	{ id: "stdout-5-18", type: "stdout", name: "Inputs 5 and 18 print a negative difference and swapped values", visible: true,
+		stdin: "5\n18", expectedStdout: "Input a number\nInput a number\n5 - 18 = -13\nAfter Swapping\nfirst variable: 18\nsecond variable: 5",
+		compareMode: "trimmed", expectedExitCode: 0,
+		hint: "Subtract the original second value from the original first value (first minus second), not the other way around. Widen a negative result with movsxd before print_int." },
+	{ id: "stdout-12-neg4", type: "stdout", name: "A negative second input prints correctly and swaps correctly", visible: true,
+		stdin: "12\n-4", expectedStdout: "Input a number\nInput a number\n12 - -4 = 16\nAfter Swapping\nfirst variable: -4\nsecond variable: 12",
+		compareMode: "trimmed", expectedExitCode: 0,
+		hint: "read_int accepts a leading minus sign. Reload each saved DWORD with movsxd before printing it, so a negative value sign-extends correctly instead of printing as a large positive number." },
+];

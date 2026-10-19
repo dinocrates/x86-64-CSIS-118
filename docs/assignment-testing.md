@@ -306,6 +306,322 @@ verify the public launch link separately from these local checks.
 
 ---
 
+## Unit 03 Lab 3A — General Purpose Registers
+
+The new stable ID is **`unit03-lab3a-registers`**, registered immediately
+after Unit 02A. It does not reuse the unrelated `unit02-register-arithmetic`
+or `unit03-branching` drafts; those remain unpublished, with their starter/
+test files retained for future course assignments. Unit 1 and Unit 02A are
+unchanged.
+
+After deployment, use:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit03-lab3a-registers
+```
+
+For local review, use the Vite server's repository subpath with the same
+query: `/x86-64-CSIS-118/index.html?assignment=unit03-lab3a-registers`. Local
+validation does not update the public site; publish only when the instructor
+requests it, by pushing the reviewed commit to `master`.
+
+### Scope and submission
+
+This is a small guided-practice lab about `mov`, the general-purpose
+registers, and NASM's three non-decimal integer-literal prefixes. The
+complete, runnable starter assembles, links, and prints three zeros:
+
+```text
+0
+0
+0
+```
+
+Students complete three TODOs, each loading a differently-prefixed literal
+into EAX, copying it into EDI, and printing it in decimal:
+
+| Task | Literal | Prefix | Decimal output |
+|---|---|---|---|
+| 1 | Decimal 171 in binary | `0b` | `171` |
+| 2 | Hexadecimal 32 | `0x` | `50` |
+| 3 | Octal 20 | `0o` | `16` |
+
+The finished program prints exactly `171`, `50`, `16` on three lines, in that
+order, then exits normally with status 0. No labels, prompts, literal
+prefixes, hexadecimal display, loops, user-defined procedures, stack
+manipulation, input routines, or raw syscalls are required; `print_hex` is
+inconsistent with this assignment. This is **30 points, graded by the
+instructor** (9 directions/documentation + 4.5 assembly/linking + 9
+execution/output + 7.5 program correctness). **Canvas File Upload** receives
+`Lastname_Firstname_U03A.asm`, a readable screenshot (or accessible
+plain-text file) of all three output lines, and two brief Canvas
+submission-comment responses (why the hex task prints 50 and what
+`mov edi, eax` does; a one-sentence assembly/linking/execution distinction).
+Download names remain `unit03-lab3a-registers.asm`; students rename the
+downloaded file. Generic Share/Copy Code remain available for reproducible
+code without replacing the required files, exactly as for Unit 02A.
+
+### Practice checks and the literal/active-code source contracts
+
+Six visible checks, none scored (practice feedback only): assembly/linking;
+one source-check per required literal (`binary-literal`, `hex-literal`,
+`octal-literal`); one source-check for the register-to-output pattern
+(`main` exists, an active `mov edi, eax` and `call print_uint` appear, and an
+active `call print_hex` is banned); and one `stdout` check for the exact
+three decimal lines with exit status 0 (`compareMode: "trimmed"`, which
+tolerates only a harmless trailing newline — reordering, extra text, or blank
+lines between results still fail). The starter passes assembly and the
+register-to-output pattern (it already copies EAX to EDI and calls
+`print_uint`) but fails all three literal checks and the output check.
+
+The new opt-in `SourceCheckTest` field `requiredLiteralLoad: { register,
+prefix, decimalValue }` is implemented by `hasLiteralLoad` /
+`parseNasmIntLiteral` in `testing/sourceChecks.ts`. It scans **de-commented**
+source (via the existing `stripComments` helper) for an active
+`mov <register>, <literal>` whose prefix matches and whose parsed numeric
+value equals `decimalValue`, accepting any capitalization, leading zeroes,
+and NASM underscore digit separators (e.g. `0b1010_1011`). A commented-out
+correct example is never matched, because `stripComments` removes it first.
+Decimal-only or expression literals do not satisfy the prefix requirement,
+by design — this lab is specifically about the literal notation.
+
+A second new opt-in field, `requiredActivePatterns`, checks a regex against
+the same de-commented source (unlike the pre-existing `requiredPatterns`,
+which intentionally matches *raw* source so an instructor can require
+something inside a comment, such as a header line). Use
+`requiredActivePatterns` whenever the check is about what the program
+actually does — such as this lab's `mov edi, eax` / `call print_uint` check —
+so a comment containing the expected text, or a commented-out instruction,
+never satisfies it. `bannedPatterns` already worked this way before this
+lab and is unchanged.
+
+### Written instructions and the manual-review note
+
+`AssignmentInstructions` gained a required `manualReviewNote: string` field,
+shown under the manual completion checklist in `AssignmentInstructions.svelte`.
+Previously that paragraph was hardcoded by `submissionMode` (a Movie-Showcase-
+specific sentence for every `file-upload` assignment), which would have bled
+Unit 02A's movie-specific review note into this lab since both use
+`file-upload`. Each assignment now supplies its own sentence; Unit 1 and
+Unit 02A's existing wording is preserved verbatim as their `manualReviewNote`.
+
+Unit 03 Lab 3A's written instructions have no assignment video, transcript,
+or author/copyright footer, per the instructor's current requirements;
+a radix-notation example (hexadecimal `0x0C` prints `12`) illustrates that
+a literal's prefix controls how NASM reads the source digits, not what the
+register permanently is. The due-date text is the shared
+"See the due date shown in Canvas" line already used by every assignment's
+instructions dialog; the submission checklist separately notes that grading
+is expected within four days of the due date, per the Canvas page, without
+inventing a due date, time estimate, attempt limit, or late policy.
+
+### Validation
+
+`webapp/tests/unit03.spec.js` exercises: the deep link in an empty autosave
+slot and NASM mode; the real starter (prints `0\n0\n0`, assembles, exits 0,
+and fails all three literal checks plus the output check while passing
+assembly and the register-to-output check); a complete reference fixture
+(passes all six checks, prints the real three-line output, recovers from a
+nonzero exit and a timeout); decimal-only substitutes for each of the three
+literals (prints the correct value but fails only that task's check, in
+isolation from the other two); a wrong literal value (fails both its literal
+check and the output check); the `stdout` contract directly (rejects
+reordered output, extra text, blank separators between results, and
+hexadecimal display); valid uppercase/leading-zero/underscore literal and
+mnemonic variants (still pass); a commented-out correct literal alongside a
+wrong active one (still fails); save/reset/download/share isolation; and
+keyboard/theme coverage of the instructions dialog and practice readout at
+desktop and narrow widths. `webapp/tests/unit01.spec.js`'s assignment-dropdown
+option list was updated to include this lab's title, the one place that test
+suite enumerates every registered assignment.
+
+Run from `webapp`:
+
+```powershell
+npm run build
+npm test -- --project=app unit03.spec.js
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+```
+
+---
+
+## Unit 03 Lab 3B — Creating Variables
+
+The new stable ID is **`unit03-lab3b-variables`**, registered immediately
+after Lab 3A. Lab 3A (`unit03-lab3a-registers`) is unchanged and remains
+selectable alongside it; Unit 1 and Unit 02A are unchanged.
+
+After deployment, use:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit03-lab3b-variables
+```
+
+For local review, use the Vite server's repository subpath with the same
+query: `/x86-64-CSIS-118/index.html?assignment=unit03-lab3b-variables`.
+
+### Scope and submission
+
+Students expand a complete, runnable one-number example (prompts, reads,
+and echoes a single signed integer via `read_int`/`print_int`) into a
+two-variable program that defines `first_value: dd 0` and
+`second_value: dd 0`, reads and stores both inputs, prints their original
+values as a signed subtraction equation, swaps the two DWORDs using only
+`mov` and temporary registers (no `xchg`, no arithmetic swap, no stack),
+and reprints both variables — reloaded from memory — under an `After
+Swapping` heading. For inputs 18 and 5, stdout is exactly:
+
+```text
+Input a number
+Input a number
+18 - 5 = 13
+After Swapping
+first variable: 5
+second variable: 18
+```
+
+This is **30 points, graded by the instructor** (9 directions/documentation
++ 4.5 assembly/linking + 9 execution/output + 7.5 program correctness).
+**Canvas File Upload** receives `Lastname_Firstname_U03B.asm`, readable
+output evidence for *both* 18/5 and 5/18 (a screenshot or plain-text file),
+and a two-to-four-sentence Canvas submission-comment explaining why EAX is
+stored immediately after `read_int` and how temporary registers prevent
+losing an original swap value. Download names remain
+`unit03-lab3b-variables.asm`.
+
+### A real library bug this lab surfaced and fixed
+
+**`read_int` in `csis118b.inc` never cleared or null-terminated its 32-byte
+stack scratch buffer.** No previously published assignment calls `read_int`
+more than zero times, so this was unexercised until this lab's two
+sequential reads. The bug: the routine reads up to 32 bytes but parses
+digits from the buffer without regard to how many bytes the `read()`
+syscall actually returned. On a *second* call that reuses the same stack
+slot, a short read (e.g. typing `"5"` after an earlier `"18"`) left the
+prior call's unconsumed bytes (`'8'`) sitting right after the new byte,
+and since `'8'` is a valid digit character, the parse loop kept going:
+`5` parsed as `58`. This reproduced with the exact `18`/`5` fixture against
+the full two-read, two-store, subtract-and-swap reference implementation,
+even though a minimal two-`read_int`-calls-with-no-stores-in-between probe
+did *not* trigger it — the corruption depends on which stack bytes get
+reused, which depends on what else is called in between. The fix (both
+`webapp/public/csis118b.inc` and `webapp/src/assets/csis118b.inc`, kept
+byte-identical as before) NUL-terminates the buffer immediately after the
+bytes actually read (`cmp rax, 32` / `mov byte [rsp + rax], 0`), so a short
+second read can never run on into stale digits. Verified against all 9 of
+this lab's fixtures (including the adversarial longer-then-shorter-input
+case) before and after the fix; zero regression risk to existing
+assignments since none previously called `read_int`.
+
+### New engine and UI capabilities this lab needed
+
+- **`requiredDwordVariables`** (`SourceCheckTest`, `testing/sourceChecks.ts`):
+  a `dd`-specific analog of the existing `db`-only `requiredDataLabels`,
+  using the same comment/string-masking scanner. Narrowly scoped — it does
+  not become a general NASM parser.
+- **`requiredActivePatterns`'s existing semantics now also back this lab's
+  "reads-and-stores" and "signed-output-no-cheats" checks** (regex against
+  de-commented source, so a commented-out example never satisfies it),
+  reused unchanged from Lab 3A.
+- **`AssignmentInstructions.codeExamples`** and a new
+  `AssignmentCodeExample.svelte` component: selectable, read-only,
+  NASM-syntax-highlighted code blocks (reusing the editor's own
+  `prism-code-editor` NASM grammar and tokenizer — `highlightText` — so
+  keyword/string/number/register/label coloring stays consistent with the
+  real editor) with optional sample-input/expected-output blocks. Rendered
+  with a **fixed** a11y-dark palette regardless of the app's active theme,
+  matching the course's Canvas code-block convention, with explicit
+  `text-shadow`/`box-shadow`/`filter`/`font-weight` `!important` resets so
+  no inherited page style can bleed in. This exists because Lab 3B's
+  written directions require in-app code examples (prompt/read/store,
+  print-signed-DWORD, subtract-before-swap) — "do not require students to
+  leave the playground for an essential explanation" — and the prior
+  instructions dialog had no code-block rendering at all.
+- **`AssignmentInstructions.helpLinks`**: renders the Unit 3 discussion,
+  course Discord, and course modules links as a plain "Get help" list.
+- **Inline code pills**: `core/inlineCode.ts`'s `renderInline()` turns
+  `` `backtick` `` spans in instruction prose into styled `<code>` pills
+  (escaping everything else first; instruction text is a trusted,
+  developer-authored constant, never student or network input, so `{@html}`
+  here is safe). Used across objectives/steps/submission/rubric/checklist
+  text in `AssignmentInstructions.svelte`.
+- **`AssignmentInstructions.manualReviewNote`** (added for Lab 3A, reused
+  here): each assignment supplies its own instructor-review sentence
+  instead of the component picking Movie-Showcase-specific wording for
+  every `file-upload` assignment. Lab 3B's note names the exact detection
+  limit the spec calls out: stdout alone cannot distinguish a genuine
+  in-memory swap from a program that prints the originals in reverse order,
+  so the instructor reviews the actual stores and the MOV-only swap.
+
+### Practice checks
+
+Seven visible checks: assembly/linking; `variables-defined`
+(`requiredDwordVariables: ["first_value", "second_value"]`);
+`reads-and-stores` (`main` exists; active `call read_int`, active
+`mov dword [rel first_value], <32-bit reg>`, and active
+`mov dword [rel second_value], <32-bit reg>` — the register itself is
+intentionally unconstrained, so this does not overfit one
+register-allocation solution); `signed-output-no-cheats` (active
+`movsxd rdi` somewhere, and `xchg` banned outright — safe to ban globally
+since this lab has no legitimate use for it, unlike `sub`, which stays
+required for the equation and is deliberately *not* banned even though it
+must not be used for the swap); and three `stdout` checks for the exact
+fixtures `18/5 → 13`, `5/18 → -13`, and `12/-4 → 16` (`compareMode:
+"trimmed"`, two-line `stdin` per the existing `"line1\nline2"` convention —
+`TestMachine.runLoaded()` already fed stdin one line per
+`PROGRAM_READLINE_PAUSE`, unchanged by this lab). The remaining 6 of the
+spec's 9 fixtures (including both `±1,000,000` boundary cases and the
+all-negative pair) are exercised only in the Playwright regression suite,
+not as separate visible checks, to keep Check My Work's test list
+readable — this mirrors Lab 3A's practice of using a representative subset
+visibly while validating the full fixture matrix in tests.
+
+As the spec requires, **no check attempts to detect a forbidden arithmetic
+swap** (XOR/add-subtract tricks) or to prove the swap happened in memory
+rather than via reversed print order — both are left to instructor/debugger
+review, exactly as instructed, since neither is reliably detectable from
+regex or from stdout alone without false positives against the legitimate
+`sub` usage elsewhere in the same program.
+
+### Validation
+
+`webapp/tests/unit03b.spec.js` exercises: the deep link in an empty autosave
+slot and NASM mode, plus a **real interactive terminal** pass (compile,
+type `-7` into the actual stdin input box, submit, observe `You entered:
+-7`) — the first test in this repo to drive that UI path, since no prior
+assignment used stdin; the starter (assembles, echoes `-7`/`0`/`42`, passes
+assembly and `signed-output-no-cheats`, fails the two-variable and
+read-and-store checks); a complete reference fixture passing all seven
+checks and reproducing the literal stdout of **all 9** spec fixtures
+(verified directly against `TestMachine`, beyond the 3 that are visible
+checks); four isolated bug injections — losing the first input, reversing
+the subtraction operands, loading a negative DWORD only into EDI instead of
+`movsxd` (verified against the `12/-4` fixture specifically, since it is
+the one with a negative operand), and skipping the swap entirely (so the
+post-swap section redisplays unswapped originals) — each producing a
+useful `stdout` failure; nonzero-exit and timeout recovery; source-check
+capitalization/spacing tolerance and `xchg` rejection; a commented-out
+correct store that is genuinely inactive (both of its two syntactically
+identical active occurrences removed, since this fixture's swap
+incidentally also stores into `second_value`); save/reset/download/share
+isolation alongside Lab 3A; and keyboard/theme coverage of the
+instructions dialog, including the new code-examples block and help links,
+at desktop and narrow widths. `webapp/tests/unit01.spec.js`'s
+assignment-dropdown option list was updated again to include this lab's
+title.
+
+Run from `webapp`:
+
+```powershell
+npm run build
+npm test -- --project=app unit03b.spec.js
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+```
+
+---
+
 ## How the system works (one-minute version)
 
 - Each assignment is an `AssignmentConfig` object: an id, title,

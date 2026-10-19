@@ -561,6 +561,16 @@ read_int:
     mov  rdx, 32            ; read up to 32 bytes
     syscall
 
+    ; A short read (the common case - one typed line) leaves the rest of
+    ; this buffer holding whatever was there before, which on a repeated
+    ; call is this same stack slot's leftover bytes from the PREVIOUS
+    ; call. NUL-terminate right after the bytes actually read so the
+    ; digit scan below can never run on into a prior call's stale digits.
+    cmp  rax, 32
+    jae  .ri_terminated      ; a full 32-byte read leaves no room to terminate
+    mov  byte [rsp + rax], 0
+.ri_terminated:
+
     ; --- Set up parsing state ---
     mov  rbx, rsp           ; rbx = pointer to current character
     xor  r12, r12           ; r12 = result = 0
