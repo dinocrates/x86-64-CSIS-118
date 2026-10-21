@@ -16,8 +16,16 @@ export interface AssignmentConfig {
 	starterCode: string;
 	tests: AssignmentTest[];
 	instructions?: AssignmentInstructions;
-	/** Omitted assignments retain the existing Canvas Text Entry workflow. */
-	submissionMode?: "file-upload";
+	/**
+	 * Omitted assignments retain the existing Unit 1 Canvas Text Entry
+	 * workflow (share link + written responses). "file-upload" is Unit 02A's
+	 * source+output file checklist. "source-text" is a narrower Canvas Text
+	 * Entry variant for assignments whose Canvas submission is the complete,
+	 * commented NASM source pasted as formatted code — no mandatory share
+	 * link or written responses; the Share link remains available but is
+	 * explicitly optional and does not replace the pasted source.
+	 */
+	submissionMode?: "file-upload" | "source-text";
 	/** Advisory source reminders only; never execution checks or grades. */
 	personalizationReminders?: { pattern: string; message: string }[];
 }
@@ -106,6 +114,10 @@ export interface SourceCheckTest extends BaseTest {
 	requiredDataLabels?: string[];
 	/** Separate named dd (DWORD) definitions; NASM data-label colons are optional. */
 	requiredDwordVariables?: string[];
+	/** Separate named dw (WORD) definitions (e.g. `num1: dw 0`); NASM data-label colons are optional. */
+	requiredWordDataVariables?: string[];
+	/** Separate named resw 1 (WORD) reservations; NASM data-label colons are optional. */
+	requiredWordVariables?: string[];
 	/** Opt-in lab organization check on student source before includes expand. */
 	studentSectionCounts?: { data: number; text: number };
 	/** Regex sources (or plain strings) that must NOT appear. Checked against de-commented source. */
@@ -146,6 +158,16 @@ export interface StdoutTest extends BaseTest {
 	messageLines?: { count: number; identifyingPrefix: string };
 	/** Personalized Title/Year/Director records, separated by blank lines. */
 	movieRecords?: { count: number };
+	/**
+	 * Locates exactly one `Sum: <value>` line, then a `Reverse order:`
+	 * heading immediately followed by exactly four decimal-value lines, and
+	 * compares them to `sum`/`reverse`. Everything before the Sum: line
+	 * (prompts, echoed input) is ignored and its wording is unconstrained;
+	 * a missing or duplicated Sum: line, a missing/misplaced Reverse order:
+	 * heading, extra or missing reversed values, or trailing output after
+	 * them all fail. Values compare as exact unsigned decimal integers.
+	 */
+	sumAndReverse?: { sum: number; reverse: [number, number, number, number] };
 	expectedExitCode?: number;
 }
 

@@ -128,7 +128,7 @@ function studentCodeTokens(source: string): string {
 }
 
 export function checkStudentOrganization(source: string, test: SourceCheckTest): string[] {
-	if (!test.requiredDataLabels && !test.requiredDwordVariables && !test.studentSectionCounts) return [];
+	if (!test.requiredDataLabels && !test.requiredDwordVariables && !test.requiredWordDataVariables && !test.requiredWordVariables && !test.studentSectionCounts) return [];
 	const tokens = studentCodeTokens(source);
 	const problems: string[] = [];
 	const dbDefinitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][bB])\b/gm)];
@@ -141,6 +141,18 @@ export function checkStudentOrganization(source: string, test: SourceCheckTest):
 	for (const label of test.requiredDwordVariables ?? []) {
 		if (ddDefinitions.filter((definition) => definition[1] === label).length !== 1) {
 			problems.push(`Define \`${label}\` once as its own dd (DWORD) variable. A colon before dd is optional.`);
+		}
+	}
+	const dwDefinitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)([dD][wW])\b/gm)];
+	for (const label of test.requiredWordDataVariables ?? []) {
+		if (dwDefinitions.filter((definition) => definition[1] === label).length !== 1) {
+			problems.push(`Define \`${label}\` once as its own dw (WORD) variable. A colon before dw is optional.`);
+		}
+	}
+	const reswDefinitions = [...tokens.matchAll(/^[ \t]*([A-Za-z_.?$][A-Za-z0-9_.?$#@~]*)[ \t]*(?::[ \t]*|[ \t]+)[rR][eE][sS][wW][ \t]+1\b[ \t]*$/gm)];
+	for (const label of test.requiredWordVariables ?? []) {
+		if (reswDefinitions.filter((definition) => definition[1] === label).length !== 1) {
+			problems.push(`Define \`${label}\` once as its own resw 1 (WORD) reservation in section .bss. A colon before resw is optional.`);
 		}
 	}
 	if (test.studentSectionCounts) {

@@ -21,7 +21,7 @@ import {
 	formatU64,
 } from "./registerChecks";
 import { hasLabel, runSourceCheckTest } from "./sourceChecks";
-import { checkMessageLines, checkMovieRecords, compareStdout } from "./stdoutCompare";
+import { checkMessageLines, checkMovieRecords, checkSumAndReverse, compareStdout } from "./stdoutCompare";
 import { personalizationReminders } from "./personalization";
 import {
 	type HarnessRequest,
@@ -431,8 +431,18 @@ async function runStdoutTest(
 			loadedSource,
 		};
 	}
+	if (test.sumAndReverse) {
+		const problem = checkSumAndReverse(actual, test.sumAndReverse);
+		return {
+			result: finish(test, problem ? "failed" : "passed", {
+				message: problem ?? "Your program printed the correct Sum and Reverse order values and exited normally.",
+				actual: truncate(actual),
+			}),
+			loadedSource,
+		};
+	}
 	if (test.expectedStdout === undefined) {
-		throw new Error("A stdout check needs expectedStdout, messageLines, or movieRecords.");
+		throw new Error("A stdout check needs expectedStdout, messageLines, movieRecords, or sumAndReverse.");
 	}
 
 	const mode = test.compareMode ?? "normalized";

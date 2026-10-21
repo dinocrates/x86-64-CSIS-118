@@ -11,6 +11,12 @@ import { unit03Lab3aRegistersInstructions } from "./instructions/unit03_lab3a_re
 import { unit03Lab3bVariablesStarter } from "./starters/unit03_lab3b_variables.asm";
 import { unit03Lab3bVariablesTests } from "./tests/unit03_lab3b_variables.tests";
 import { unit03Lab3bVariablesInstructions } from "./instructions/unit03_lab3b_variables";
+import { unit04VariablesArithmeticStarter } from "./starters/unit04_variables_arithmetic.asm";
+import { unit04VariablesArithmeticTests } from "./tests/unit04_variables_arithmetic.tests";
+import { unit04VariablesArithmeticInstructions } from "./instructions/unit04_variables_arithmetic";
+import { unit04A01SumReverseStarter } from "./starters/unit04_a01_sum_reverse.asm";
+import { unit04A01SumReverseTests } from "./tests/unit04_a01_sum_reverse.tests";
+import { unit04A01SumReverseInstructions } from "./instructions/unit04_a01_sum_reverse";
 
 /**
  * The CSIS-118B assignment list.
@@ -88,11 +94,43 @@ export const unit03Lab3bVariablesAssignment: AssignmentConfig = {
 	],
 };
 
+export const unit04VariablesArithmeticAssignment: AssignmentConfig = {
+	id: "unit04-variables-basic-arithmetic",
+	title: "Unit 04 — Variables & Basic Arithmetic",
+	unit: "Unit 4",
+	description: "Read two whole numbers into WORD variables and print their sum, difference, product, quotient, and remainder. 30 points, graded by your instructor.",
+	starterCode: unit04VariablesArithmeticStarter,
+	tests: unit04VariablesArithmeticTests,
+	instructions: unit04VariablesArithmeticInstructions,
+	submissionMode: "source-text",
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+	],
+};
+
+export const unit04A01SumReverseAssignment: AssignmentConfig = {
+	id: "unit04-a01-sum-reverse",
+	title: "Unit 04 — Assignment 1: Sum and Reverse",
+	unit: "Unit 4",
+	description: "Read four unsigned whole numbers into WORD/DWORD variables, print their full 64-bit sum, then print the four values in reverse order. 30 points, graded by your instructor.",
+	starterCode: unit04A01SumReverseStarter,
+	tests: unit04A01SumReverseTests,
+	instructions: unit04A01SumReverseInstructions,
+	submissionMode: "source-text",
+	personalizationReminders: [
+		{ pattern: "Your Name", message: "Replace “Your Name” in the header with your name." },
+		{ pattern: "YYYY-MM-DD", message: "Replace YYYY-MM-DD in the header with your completion date." },
+	],
+};
+
 export const assignments: AssignmentConfig[] = [
 	unit01HelloAssignment,
 	unit02MovieShowcaseAssignment,
 	unit03Lab3aRegistersAssignment,
 	unit03Lab3bVariablesAssignment,
+	unit04VariablesArithmeticAssignment,
+	unit04A01SumReverseAssignment,
 ];
 
 export function getAssignmentById(id: string | null): AssignmentConfig | null {

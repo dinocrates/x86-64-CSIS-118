@@ -92,6 +92,62 @@ export function checkMovieRecords(stdout: string, contract: { count: number }): 
 	return null;
 }
 
+/**
+ * Validate a "Sum: <n>" line followed by a "Reverse order:" section of
+ * exactly four decimal values, ignoring everything before the Sum: line
+ * (prompts/echo, whose wording this assignment does not fix). Rejects a
+ * missing or duplicated Sum: line, a missing/misplaced heading, missing or
+ * extra reversed values (including trailing output after them), and
+ * compares every value as an exact unsigned decimal integer.
+ */
+export function checkSumAndReverse(
+	stdout: string,
+	contract: { sum: number; reverse: [number, number, number, number] },
+): string | null {
+	const lines = stdout.replace(/\r\n?/g, "\n").split("\n").map((line) => line.trim());
+	const isSumLine = (line: string) => /^Sum:\s*[0-9]+\s*$/.test(line);
+
+	const sumIndex = lines.findIndex(isSumLine);
+	if (sumIndex === -1) {
+		return "No \"Sum: <value>\" line was found. Print exactly one Sum: line with your 64-bit total.";
+	}
+	if (lines.slice(sumIndex + 1).some(isSumLine)) {
+		return "More than one \"Sum: \" line was found. Print the Sum: result exactly once.";
+	}
+	const actualSum = Number(lines[sumIndex].match(/[0-9]+/)![0]);
+	if (actualSum !== contract.sum) {
+		return `Sum: printed ${actualSum}, but the correct total for these inputs is ${contract.sum}. Check that your running total and additions use 64-bit operands.`;
+	}
+
+	let i = sumIndex + 1;
+	while (i < lines.length && lines[i] === "") i++;
+	if (lines[i] !== "Reverse order:") {
+		return "Expected a \"Reverse order:\" line immediately after Sum: (with no other output in between).";
+	}
+	i++;
+
+	const values: number[] = [];
+	for (let k = 0; k < 4; k++) {
+		if (i >= lines.length || !/^[0-9]+$/.test(lines[i])) {
+			return `Expected four reversed values after "Reverse order:" (num4, num3, num2, num1, one per line); found ${values.length} valid value(s) before something else appeared.`;
+		}
+		values.push(Number(lines[i]));
+		i++;
+	}
+	while (i < lines.length && lines[i] === "") i++;
+	if (i < lines.length) {
+		return "Found extra output after the four reversed values. Print only the required Sum: and Reverse order: section.";
+	}
+
+	const labels = ["num4", "num3", "num2", "num1"];
+	for (const [index, expected] of contract.reverse.entries()) {
+		if (values[index] !== expected) {
+			return `Reverse order: value ${index + 1} (${labels[index]}) is ${values[index]}, but expected ${expected}. Reload the original inputs from memory and print them in num4, num3, num2, num1 order.`;
+		}
+	}
+	return null;
+}
+
 export function compareStdout(
 	expected: string,
 	actual: string,

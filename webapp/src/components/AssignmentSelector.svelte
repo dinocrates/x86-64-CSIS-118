@@ -106,6 +106,8 @@
       <p class="assignment__submitnote">
         {#if $selectedAssignment.submissionMode === 'file-upload'}
           Submit your final .asm source and output evidence in Canvas File Upload. Rename the downloaded file as shown in the submission checklist.
+        {:else if $selectedAssignment.submissionMode === 'source-text'}
+          Paste your complete, commented NASM source as formatted code into Canvas Text Entry. A Share link is optional and does not replace the required source.
         {:else if $selectedAssignment.instructions}
           Submit your tested share link, two output lines, and three written responses in Canvas Text Entry.
         {:else}
@@ -118,7 +120,7 @@
           {#if reminders.length}
             <ul>{#each reminders as reminder}<li>{reminder}</li>{/each}</ul>
           {/if}
-          <p>A program can pass execution checks while still needing personalization. Review your comments{#if $selectedAssignment.submissionMode !== 'file-upload'}, debugger observation{/if}, and the manual completion checklist before submitting.</p>
+          <p>A program can pass execution checks while still needing personalization. Review your comments{#if $selectedAssignment.submissionMode === undefined}, debugger observation{/if}, and the manual completion checklist before submitting.</p>
         </details>
       {/if}
     {/if}

@@ -75,6 +75,8 @@
             Opening it reopens this exact code in this assignment.
             {#if $selectedAssignment.submissionMode === 'file-upload'}
               For this assignment, submit your .asm file and output evidence in Canvas.
+            {:else if $selectedAssignment.submissionMode === 'source-text'}
+              For this assignment, this link is optional — submit your commented source as formatted code in Canvas Text Entry.
             {:else}
               You can also paste it into Canvas as your submission.
             {/if}

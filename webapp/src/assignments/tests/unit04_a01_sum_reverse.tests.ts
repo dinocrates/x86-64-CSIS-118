@@ -1,0 +1,47 @@
+import type { AssignmentTest } from "../types";
+
+const SIXTEEN_BIT_REGISTER = "(?:ax|bx|cx|dx|si|di|bp|sp|r8w|r9w|r10w|r11w|r12w|r13w|r14w|r15w)";
+const THIRTYTWO_BIT_REGISTER = "(?:e[a-z]{2}|r\\d{1,2}d)";
+
+export const unit04A01SumReverseTests: AssignmentTest[] = [
+	{ id: "assemble", type: "assemble", name: "Code assembles and links successfully", visible: true,
+		hint: "Run the starter first. Check NASM diagnostics, spelling, and the course include." },
+	{ id: "variables-defined", type: "source-check", name: "Four input variables are defined with the required widths", visible: true,
+		requiredWordDataVariables: ["num1", "num2"],
+		requiredDwordVariables: ["num3", "num4"],
+		hint: "num1 and num2 are each a WORD: num1: dw 0 and num2: dw 0. num3 and num4 are each a DWORD: num3: dd 0 and num4: dd 0." },
+	{ id: "reads-and-stores", type: "source-check", name: "Each input is read with read_int and stored into its own correctly sized variable", visible: true,
+		requiredLabels: ["main"],
+		requiredActivePatterns: [
+			"call\\s+read_int",
+			`mov\\s+word\\s*\\[\\s*rel\\s+num1\\s*\\]\\s*,\\s*${SIXTEEN_BIT_REGISTER}\\b`,
+			`mov\\s+word\\s*\\[\\s*rel\\s+num2\\s*\\]\\s*,\\s*${SIXTEEN_BIT_REGISTER}\\b`,
+			`mov\\s+dword\\s*\\[\\s*rel\\s+num3\\s*\\]\\s*,\\s*${THIRTYTWO_BIT_REGISTER}\\b`,
+			`mov\\s+dword\\s*\\[\\s*rel\\s+num4\\s*\\]\\s*,\\s*${THIRTYTWO_BIT_REGISTER}\\b`,
+		],
+		hint: "After each call read_int, store its result immediately: mov word [rel num1], ax (and num2 the same way), then mov dword [rel num3], eax (and num4 the same way)." },
+	{ id: "sumreverse-10-20-300-400", type: "stdout", name: "An ordinary input set prints the correct Sum and Reverse order", visible: true,
+		stdin: "10\n20\n300\n400", sumAndReverse: { sum: 730, reverse: [400, 300, 20, 10] }, expectedExitCode: 0,
+		hint: "Print Sum: followed by the 64-bit total, then Reverse order: followed by num4, num3, num2, num1, each on its own line." },
+	{ id: "sumreverse-0-0-0-0", type: "stdout", name: "All-zero inputs print a zero Sum and zero Reverse order values", visible: true,
+		stdin: "0\n0\n0\n0", sumAndReverse: { sum: 0, reverse: [0, 0, 0, 0] }, expectedExitCode: 0,
+		hint: "Zero is a valid input for every variable. Reload each stored input for the reverse output rather than assuming a register still holds it." },
+	{ id: "sumreverse-1-2-65536-70000", type: "stdout", name: "DWORD inputs beyond 65535 are stored and summed without truncation", visible: true,
+		stdin: "1\n2\n65536\n70000", sumAndReverse: { sum: 135539, reverse: [70000, 65536, 2, 1] }, expectedExitCode: 0,
+		hint: "num3 and num4 can exceed what a WORD holds. Store them with a DWORD write (mov dword [rel num3], eax) and widen them with an ordinary 32-bit load, not a WORD load." },
+	{ id: "sumreverse-0-0-max-1", type: "stdout", name: "A sum crossing 32 bits is calculated with 64-bit arithmetic", visible: true,
+		stdin: "0\n0\n4294967295\n1", sumAndReverse: { sum: 4294967296, reverse: [1, 4294967295, 0, 0] }, expectedExitCode: 0,
+		hint: "This total (4294967296) does not fit in 32 bits. Use a 64-bit accumulator and 64-bit ADD operations; loading another input into EAX would overwrite the total and clear RAX's upper half." },
+	{ id: "sumreverse-all-maxima", type: "stdout", name: "The maximum possible inputs print the maximum possible Sum", visible: true,
+		stdin: "65535\n65535\n4294967295\n4294967295", sumAndReverse: { sum: 8590065660, reverse: [4294967295, 4294967295, 65535, 65535] }, expectedExitCode: 0,
+		hint: "Widen every input as unsigned (zero-extend, never sign-extend) before adding it into your 64-bit total." },
+	{ id: "sumreverse-high-bit-dwords", type: "stdout", name: "DWORD inputs above 2147483647 remain positive", visible: true,
+		stdin: "32768\n65535\n2147483648\n2147483649", sumAndReverse: { sum: 4295065600, reverse: [2147483649, 2147483648, 65535, 32768] }, expectedExitCode: 0,
+		hint: "A DWORD value above 2147483647 is still a positive unsigned input here. An ordinary 32-bit MOV load (not a sign-extending one) keeps it positive when widened to 64 bits." },
+	{ id: "sumreverse-unequal-large", type: "stdout", name: "An unequal, large input set still prints the correct Sum and order", visible: true,
+		stdin: "65535\n1\n4000000000\n123456789", sumAndReverse: { sum: 4123522325, reverse: [123456789, 4000000000, 1, 65535] }, expectedExitCode: 0,
+		hint: "Reload each of the four original inputs from memory for the reverse output; the sum calculation must not change any of the four stored values." },
+	{ id: "sumreverse-1-1-1-1", type: "stdout", name: "A small, equal input set exercises every variable at once", visible: true,
+		stdin: "1\n1\n1\n1", sumAndReverse: { sum: 4, reverse: [1, 1, 1, 1] }, expectedExitCode: 0,
+		hint: "Print exactly one Sum: line and exactly four reversed values (num4, num3, num2, num1) — no extra or missing lines." },
+];

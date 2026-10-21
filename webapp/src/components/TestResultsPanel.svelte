@@ -106,7 +106,7 @@
         <p><strong>Program checks and submission preparation are separate.</strong> Personalization still needed:</p>
         <ul>{#each report.reminders as reminder}<li>{reminder}</li>{/each}</ul>
       {/if}
-      <p class="results__note">{#if $selectedAssignment?.submissionMode === 'file-upload'}Check My Work runs practice tests in your browser. Passing these tests does not guarantee full credit. Download your final .asm source and submit it with output evidence in Canvas, following this assignment's checklist.{:else}{MESSAGES.checkMyWorkNote}{/if}</p>
+      <p class="results__note">{#if $selectedAssignment?.submissionMode === 'file-upload'}Check My Work runs practice tests in your browser. Passing these tests does not guarantee full credit. Download your final .asm source and submit it with output evidence in Canvas, following this assignment's checklist.{:else if $selectedAssignment?.submissionMode === 'source-text'}Check My Work runs practice tests in your browser. Passing these tests does not guarantee full credit. Paste your complete, commented NASM source as formatted code into Canvas Text Entry when you submit.{:else}{MESSAGES.checkMyWorkNote}{/if}</p>
     {/if}
   </section>
 {/if}

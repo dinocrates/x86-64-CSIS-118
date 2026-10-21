@@ -9,7 +9,11 @@ pieces fit together.
 "autograde" for the practice checks themselves — see
 [Why this is not grading](#why-check-my-work-is-not-official-grading)).
 Submission follows each assignment's checklist: Unit 1 uses **Copy Submission
-Link** with Canvas Text Entry; Unit 02A uses source and output file uploads.
+Link** with Canvas Text Entry; Unit 02A and Unit 03 Labs 3A/3B use source and
+output file uploads (`submissionMode: "file-upload"`); Unit 4 pastes its
+complete, commented source directly into Canvas Text Entry as formatted code
+(`submissionMode: "source-text"`), with no mandatory share link, screenshot,
+or written response.
 
 ---
 
@@ -616,6 +620,442 @@ Run from `webapp`:
 ```powershell
 npm run build
 npm test -- --project=app unit03b.spec.js
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+```
+
+---
+
+## Unit 04 — Variables & Basic Arithmetic
+
+The new stable ID is **`unit04-variables-basic-arithmetic`**, registered
+immediately after Lab 3B. Lab 3B (`unit03-lab3b-variables`) and every earlier
+assignment are unchanged.
+
+After deployment, use:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit04-variables-basic-arithmetic
+```
+
+This is the URL the implementation supports, not a claim that it is already
+published. For local review, use the Vite server's repository subpath with
+the same query:
+`/x86-64-CSIS-118/index.html?assignment=unit04-variables-basic-arithmetic`.
+Publish only when the instructor requests it, by pushing the reviewed commit
+to `master`; the existing workflow deploys changes under `webapp/**`.
+
+### Scope and submission
+
+Students expand a complete, runnable one-input starter (prompts, reads, and
+echoes one unsigned whole number via `read_int`, stored in a WORD with
+`resw 1`) into a two-input program that reserves `val1: resw 1` and
+`val2: resw 1` in `section .bss`, reads and stores both inputs, and computes
+five independent results from the **original** input pair: `Sum` (`val1 +
+val2`), `Diff` (`val1 - val2`, signed), `Prod` (`val1 * val2`), `Quot`
+(unsigned integer quotient of `val1 / val2`), and `Rem` (unsigned remainder).
+`val1` is 0–65535; `val2` is 1–65535 (never zero, so division is always
+defined). For inputs 22 and 10, stdout is exactly:
+
+```text
+Enter a number
+Enter a number
+Sum: 32
+Diff: 12
+Prod: 220
+Quot: 2
+Rem: 2
+```
+
+Sum can reach 131070 and Prod can reach 4294836225 — both exceed a WORD, and
+even exceed what fits unsigned in a plain 16-bit result, so both must be
+computed and printed from a wider (32-bit or larger) register. Diff ranges
+from -65535 through 65535 and must print a minus sign when negative
+(`print_int` with `movsxd` into RDI); the other four results are always
+nonnegative (`print_uint`). This is **30 points, graded by the instructor on
+a correct/incorrect basis** — there is no weighted rubric breakdown; see
+[Practice checks](#practice-checks-unit-04) for what Check My Work can and
+cannot verify. **Canvas Text Entry** receives the complete, commented NASM
+source pasted as formatted code (Canvas's `tohtml` tool or its own code
+formatting). A Share link is optional and does not replace the required
+source; no screenshot, separate output file, or written reflection is
+required for this assignment. Download names remain
+`unit04-variables-basic-arithmetic.asm`.
+
+### A narrow new submission mode: `source-text`
+
+Unit 1's omitted/default `submissionMode` carries its own specific checklist
+(a tested share link, two output lines, and three written Canvas responses)
+and Unit 02A/03A/03B's `"file-upload"` carries a source-plus-output-evidence
+file checklist. Neither matches this assignment's actual Canvas setup — a
+complete commented source pasted as Canvas Text Entry, with the share link
+merely optional. Applying either existing mode's copy would have been wrong:
+Unit 1's mode would wrongly demand written responses and treat the share
+link as mandatory; `"file-upload"`'s copy talks about a downloaded file and
+output evidence that this assignment does not require.
+
+`AssignmentConfig.submissionMode` gained a third value, `"source-text"`,
+implemented narrowly alongside the existing two:
+
+- `AssignmentInstructions.svelte`: the submission heading already reads
+  "Submission in Canvas Text Entry" for anything that isn't `"file-upload"`
+  (unchanged); the paragraph under the submission checklist now has a third
+  branch for `"source-text"` ("Paste your complete, commented NASM source as
+  formatted code directly into the Canvas text entry box. A Share link is
+  optional…") instead of falling into Unit 1's hardcoded "written responses"
+  paragraph.
+- `AssignmentSelector.svelte`: the submit-note paragraph gained a
+  `"source-text"` branch before the Unit-1-shaped `else if
+  $selectedAssignment.instructions` branch (which would otherwise have
+  matched this assignment too, since it also has `instructions`). The
+  personalization note's "…review your comments, debugger observation…"
+  clause is now gated on `submissionMode === undefined` specifically (it was
+  `!== 'file-upload'`, which incorrectly also matched `"source-text"`) since
+  debugger observation is not part of this assignment's submission. The
+  action row is unchanged — `submissionMode !== 'file-upload'` still shows
+  **Copy Submission Link** rather than a **Download .asm file** button, which
+  is correct here (the link is optional, reusing the existing control,
+  exactly as the spec asked, rather than adding a new button).
+- `ControlsShareDialog.svelte`: the Share dialog description gained a third
+  branch for `"source-text"` ("For this assignment, this link is optional —
+  submit your commented source as formatted code in Canvas Text Entry.")
+  instead of the generic "You can also paste it into Canvas as your
+  submission," which would have implied the link itself is an acceptable
+  submission vehicle.
+- `TestResultsPanel.svelte`: the results-footer note gained a `"source-text"`
+  branch so it points at pasting source into Canvas Text Entry, instead of
+  the generic note's "click Copy Submission Link and paste it into Canvas"
+  (which is this assignment's optional path, not its required one).
+
+Every other assignment's `submissionMode` (`undefined` for Unit 1,
+`"file-upload"` for Unit 02A/03A/03B) and their rendered copy are unchanged;
+each of the four touched components only gained one additional `{:else if}`
+branch.
+
+### New source-check capability: `requiredWordVariables`
+
+`SourceCheckTest` gained `requiredWordVariables?: string[]`, a `resw`-only
+analog of the existing `dd`-only `requiredDwordVariables` (which itself was
+added for Lab 3B as a `db`-only analog of `requiredDataLabels`). It reuses
+`checkStudentOrganization`'s existing comment/string-masking scanner
+(`studentCodeTokens`) and its optional-colon, whitespace-, and
+capitalization-tolerant label matching. It additionally requires the
+reservation count to be the literal digit `1` (e.g. `val1: resw 1`), since
+this assignment's contract is specifically "one WORD" per input — a
+`resw 2` or `resw 1` immediately followed by more digits does not match.
+Like its `dd`/`db` siblings, it ignores comments and quoted lookalikes,
+including a comment containing `val1: resw 1` or a `db` string whose text
+happens to read `"val1: resw 1"` — neither satisfies the check, and this is
+exercised directly in `unit04.spec.js`.
+
+### Practice checks (Unit 04)
+
+Twelve visible checks, all unscored (practice feedback only, exactly as the
+spec requires — this assignment's 30 points are a single correct/incorrect
+instructor judgment, not a sum of per-test points):
+
+- `assemble` — the student source assembles and links on its own.
+- `variables-defined` (`requiredWordVariables: ["val1", "val2"]`) — both
+  inputs are reserved as their own WORD.
+- `reads-and-stores` (`requiredLabels: ["main"]`;
+  `requiredActivePatterns`: an active `call read_int`, an active
+  `mov word [rel val1], <16-bit reg>`, and an active
+  `mov word [rel val2], <16-bit reg>`) — the specific 16-bit register is
+  intentionally unconstrained (`ax`/`bx`/`cx`/`dx`/`si`/`di`/`bp`/`sp`/
+  `r8w`–`r15w`), so this does not overfit one register-allocation solution,
+  mirroring Lab 3B's unconstrained-register precedent for its DWORD stores.
+- `signed-diff-output` (`requiredActivePatterns: ["movsxd\\s+rdi"]`) — Diff
+  must be sign-extended into RDI somewhere in the program before it can be
+  printed correctly; this does not pin down which preserved value is widened
+  or when, only that the technique appears in active code.
+- Eight `stdout` checks, one per row of the spec's required fixture table
+  (22/10, 10/22, 0/5, 1/1, 65535/1, 1/65535, 65535/65535, 60000/40001), each
+  `compareMode: "trimmed"` with `expectedExitCode: 0` and a hint matched to
+  what that row stresses (large Sum, negative Diff, zero-valued edge case,
+  equal inputs, maximum-value Sum/Diff/Prod, full unsigned Prod, and a large
+  uneven pair that exercises every result together, respectively). Unlike
+  Lab 3B — which showed only 3 of 9 spec fixtures as visible checks and
+  verified the rest only in Playwright — this assignment's spec explicitly
+  asks for all eight rows to run as visible checks, so all eight are
+  implemented as separate, visible `stdout` tests; there is no additional
+  hidden fixture matrix beyond them.
+
+As the spec requires, there is no automated check for the course's "concepts
+through Unit 4 only" or stack-adjustment/raw-syscall/second-entry-point
+restrictions, and no automated comment-quality check — these remain manual
+instructor review items (see `manualReviewNote` and
+[detection limits](#detection-limits-unit-04) below), exactly as Lab 3B left
+the forbidden-arithmetic-swap and in-memory-vs-reversed-print-order
+distinction to manual review rather than attempting an unreliable automated
+check for either.
+
+### Detection limits (Unit 04)
+
+Output and declaration checks confirm behavior for eight specific input
+pairs and the presence of two WORD reservations and a few active-code
+patterns — they do not prove every input is actually read into its own
+variable and used (as opposed to, say, two inputs stored into the same
+variable that happens to coincide with correct output for the visible
+pairs), do not assess comment quality or line-by-line documentation, do not
+enforce "concepts through Unit 4 only" and cannot themselves distinguish a
+compliant solution from one using a later-unit technique, and are not an
+originality/plagiarism check. `AssignmentInstructions.manualReviewNote`
+states this plainly and names the course's existing documentation (20%
+reduction for missing required comments) and permitted-concepts
+(≥50% reduction, treated as possible plagiarism) policies as instructor
+review items — these are grading policies applied by the instructor, not
+checks this app runs or enforces.
+
+### Validation
+
+`webapp/tests/unit04.spec.js` exercises: the deep link in an empty autosave
+slot; the real starter across 0/42/65535 via the actual terminal input box
+(prints `Enter a number` then `Starter value: <n>`, exits 0, and the report
+shows it passing only `assemble` and `variables-defined` while failing
+`reads-and-stores`, `signed-diff-output`, and all eight `stdout` checks); a
+complete reference fixture (kept only in this test file, never in student
+content) passing all twelve checks and reproducing the literal stdout of all
+eight spec fixtures directly against `TestMachine`; a hardcoded-22/10-output
+fixture (passes the one `stdout` check whose pair it hardcodes, fails the
+rest); isolated bug injections for WORD-width Sum truncation, sign-extending
+an unsigned WORD input, zero-extending a negative Diff for output,
+sign-extending the unsigned Prod for a negative-looking `print_int` display,
+and losing Quot/Rem across the Sum/Diff/Prod print calls — each produces a
+targeted `stdout` failure without disturbing the others; a second valid
+implementation using entirely different temporary registers, and a further
+variant using 64-bit working registers for Sum — both still pass all twelve
+checks, confirming the checks do not overfit one register-allocation
+solution; nonzero-exit and timeout recovery; source-check capitalization/
+spacing tolerance; a comment-only and a quoted-string fake `resw 1`
+declaration (neither satisfies `variables-defined`); save/reset/download/
+share isolation alongside Lab 3B; and keyboard/theme coverage of the
+instructions dialog (code examples, help links, no video/transcript
+language) and the practice readout, including this assignment's
+`"source-text"`-specific copy, at desktop and narrow widths.
+`webapp/tests/unit01.spec.js`'s assignment-dropdown option list was updated
+again to include this assignment's title.
+
+Run from `webapp` (PowerShell):
+
+```powershell
+npm run build
+npm test -- --project=app unit04.spec.js
+npm test
+npx -p typescript tsc -p tsconfig.typecheck.json
+```
+
+---
+
+## Unit 04 — Assignment 1: Sum and Reverse
+
+The new stable ID is **`unit04-a01-sum-reverse`**, registered immediately
+after the Unit 04 calculator (`unit04-variables-basic-arithmetic`). This is a
+**separate assignment** from that calculator (sum/difference/product/
+quotient/remainder on two WORD inputs) — it has its own ID, starter,
+instructions, and tests, and does not reuse or alter the calculator's.
+
+After deployment, use:
+
+```text
+https://dinocrates.github.io/x86-64-CSIS-118/index.html?assignment=unit04-a01-sum-reverse
+```
+
+This is the URL the implementation supports, not a claim that it is already
+published. For local review, use the Vite server's repository subpath with
+the same query: `/x86-64-CSIS-118/index.html?assignment=unit04-a01-sum-reverse`.
+Publish only when the instructor requests it, by pushing the reviewed commit
+to `master`.
+
+### Scope and submission
+
+Students expand a complete, runnable one-input starter (one prompt, read,
+and store of an unsigned WORD, with a temporary echo clearly marked for
+replacement) into a four-input program that declares `num1: dw 0` and
+`num2: dw 0` (WORD) and `num3: dd 0` and `num4: dd 0` (DWORD) in
+`section .data`, reads and stores all four (`num1`/`num2`: 0–65535;
+`num3`/`num4`: 0–4294967295, zero valid for all), calculates their complete
+sum using 64-bit arithmetic (maximum 8590065660 — this exceeds 32 bits, so a
+32-bit accumulator silently wraps), and prints:
+
+```text
+Sum: <total>
+Reverse order:
+<num4>
+<num3>
+<num2>
+<num1>
+```
+
+after whatever prompts the student's program uses (prompt wording is not
+fixed by this app's checks — see [the stdout
+contract](#a-new-stdout-contract-sumandreverse) below). The original four
+input values must be unchanged by the sum calculation and are reloaded from
+memory for the reverse output. This is **30 points, with original weighted
+grading criteria** (unlike the calculator assignment's single correct/
+incorrect criterion): Directions followed 9, Builds without errors 4.5,
+Execution and input/output 9, Program correctness 7.5 — see
+`unit04A01SumReverseInstructions.rubric`. **Canvas Text Entry** receives the
+complete, commented NASM source pasted as formatted code, exactly like the
+calculator assignment; a Share link is optional and supplements, but does
+not replace, the required source (`submissionMode: "source-text"`, reused
+unchanged from that assignment — see [that
+section](#a-narrow-new-submission-mode-source-text) for what it does and why
+it exists; nothing new was needed here). Download names remain
+`unit04-a01-sum-reverse.asm`.
+
+### A new stdout contract: `sumAndReverse`
+
+Every other assignment's `stdout` checks either compare the full transcript
+exactly (`expectedStdout`) or use a small bespoke parser for a personalized
+format (`messageLines`, `movieRecords`). This assignment's spec explicitly
+asks for something in between: the four prompts' wording is *not* fixed by
+the contract (so an exact full-transcript comparison would be wrong here),
+but the `Sum: <value>` / `Reverse order:` result section must be parsed and
+validated precisely — rejecting a missing or duplicated `Sum:` line, a
+missing or misplaced `Reverse order:` heading, too few or extra reversed
+values (including trailing output after them, and a stray numeric line
+spliced into the middle of the four), and comparing every value as an exact
+decimal integer.
+
+`StdoutTest` gained `sumAndReverse?: { sum: number; reverse:
+[number, number, number, number] }`, implemented by the pure
+`checkSumAndReverse` helper in `stdoutCompare.ts` (same pattern as
+`checkMessageLines`/`checkMovieRecords`) and wired into the existing stdout
+runner in `AssignmentTestRunner.ts`. It normalizes CRLF/LF and trims each
+line, then:
+
+1. Finds the **first** line matching `^Sum:\s*[0-9]+\s*$` and fails if there
+   is none, or if a second such line exists anywhere after it (a duplicate
+   result section).
+2. Compares its parsed decimal value to `sum`.
+3. Requires the very next nonblank line to read exactly `Reverse order:`
+   (fails if anything else — including a debug line — appears there first).
+4. Requires the four lines immediately after that heading to each be a bare
+   decimal integer, with no blank-line separators between them, and
+   compares them in order to `reverse` (`[num4, num3, num2, num1]`).
+5. Fails if any further nonblank output follows the four values.
+
+This also means a debug numeric line spliced in *between* two of the four
+required values is never silently absorbed as if it were the correct
+value — it either shifts the parse (so a later required value is missing
+and the check fails outright) or fails the index-by-index value comparison;
+either way it cannot pass silently. `unit04b.spec.js` exercises this
+directly against `checkSumAndReverse` — missing/duplicated/extra results,
+a missing heading, a spliced debug line, tolerance for reasonable whitespace
+around labels and CRLF line endings, and (the point of this design) that
+varied/unrelated prompt text before the `Sum:` line does not affect the
+result.
+
+### A new source-check field: `requiredWordDataVariables`
+
+The existing `requiredDwordVariables` (added for Lab 3B) already matches a
+`dd` definition regardless of section or initializer, so it was reused
+as-is for this assignment's `num3`/`num4` (`dd 0` in `.data`). But `num1`/
+`num2` are `dw 0` — an **initialized `.data` WORD**, not the uninitialized
+`resw 1` **`.bss` reservation** that Unit 04's *other* assignment (the
+calculator) required. Those are different NASM directives with different
+meanings, so the calculator's new `requiredWordVariables` (`resw`-only) does
+not match a `dw` declaration at all — this was caught by this assignment's
+own tests (`unit04b.spec.js` initially failed with "Define `num1` once as
+its own resw 1 (WORD) reservation," because the first implementation
+attempt incorrectly reused that resw-only field here).
+
+The fix was a second, narrow new field, `requiredWordDataVariables`,
+implemented exactly like `requiredDwordVariables` but scanning for the
+`dw` directive instead of `dd`. All three word/dword-ish fields
+(`requiredDwordVariables`, `requiredWordDataVariables`,
+`requiredWordVariables`) now coexist in `checkStudentOrganization`,
+each scanning independently over the same comment/string-masking
+`studentCodeTokens`, and this assignment's `variables-defined` check uses
+`requiredWordDataVariables: ["num1", "num2"]` together with
+`requiredDwordVariables: ["num3", "num4"]` in one `SourceCheckTest`. Like
+its siblings, it ignores comments and quoted lookalikes (a comment or `db`
+string that reads `"num1: dw 0"` does not satisfy it), exercised directly in
+`unit04b.spec.js`.
+
+### Practice checks (Sum and Reverse)
+
+Eleven visible checks, all unscored (practice feedback only — this
+assignment's 30 points use the weighted rubric above, applied by the
+instructor, not a sum of per-test points):
+
+- `assemble` — the student source assembles and links on its own.
+- `variables-defined` (`requiredWordDataVariables: ["num1", "num2"]`,
+  `requiredDwordVariables: ["num3", "num4"]`) — all four inputs are declared
+  with their required widths.
+- `reads-and-stores` (`requiredLabels: ["main"]`; `requiredActivePatterns`:
+  an active `call read_int`, and active `mov word [rel num1], <16-bit reg>`
+  / `mov word [rel num2], <16-bit reg>` / `mov dword [rel num3], <32-bit
+  reg>` / `mov dword [rel num4], <32-bit reg>`) — the specific register is
+  intentionally unconstrained, mirroring the calculator assignment's
+  precedent, so this does not overfit one register-allocation solution.
+  There is no dedicated source check for 64-bit accumulation specifically
+  (see below).
+- Eight `stdout` checks (`sumAndReverse`), one per row of the spec's
+  required fixture table (10/20/300/400; all zeros; 1/2/65536/70000, which
+  exercises DWORD inputs beyond a WORD's range; 0/0/4294967295/1, whose sum
+  crosses the 32-bit boundary; all four inputs at their maximum; two
+  high-bit DWORD inputs above 2147483647; an unequal large-value set; and
+  1/1/1/1), each with `expectedExitCode: 0` and a hint matched to what that
+  row stresses.
+
+As the spec explicitly asks, there is **no source-check pattern requiring a
+specific 64-bit accumulation technique** (e.g. a particular `add r64, ...`
+sequence) — unlike the sibling calculator assignment's `movsxd rdi`
+requirement (justified there because printing a negative value has
+essentially one correct technique), this assignment's spec explicitly warns
+against requiring "one prescribed register sequence," and there are
+multiple valid ways to accumulate a 64-bit total (starting in a 64-bit
+register immediately, widening at each step, accumulating in different
+temporary registers, etc.). Width/accumulation correctness is verified
+empirically instead, through the fixture table's two boundary-crossing rows
+(`0/0/4294967295/1` and the all-maxima row) — a 32-bit accumulator passes
+every other row but fails those two, which is exactly how `unit04b.spec.js`'s
+dedicated 32-bit-accumulation bug injection is verified. Likewise, there is
+no automated check for the "concepts through Unit 4 only" policy or for
+comment quality — both remain manual instructor review items, named in
+`manualReviewNote`.
+
+### Validation
+
+`webapp/tests/unit04b.spec.js` exercises: the deep link in an empty autosave
+slot, alongside the calculator assignment's own entry; the real starter
+across 0/42/65535 via the actual terminal input box (prints
+`Enter num1 (0-65535):` then `Starter value: <n>`, exits 0, and the report
+shows it passing `assemble` and `variables-defined` — the starter already
+declares all four inputs with their correct widths — while failing
+`reads-and-stores` and all eight `stdout` checks, since it reads and stores
+only the first input); a complete reference fixture (kept only in this test
+file) passing all eleven checks and reproducing the literal stdout of all
+eight spec fixtures *plus two further deterministic input sets not in the
+public table* directly against `TestMachine` (guarding against a solution
+that merely special-cases the known inputs); a
+hardcoded-sample-output fixture (passes only the one `stdout` check whose
+exact values it hardcodes, fails the rest); isolated bug injections for
+32-bit accumulation (passes the small fixture, fails the two
+boundary-crossing fixtures), signed-extending a high-bit unsigned DWORD
+input, a truncated 16-bit load of a DWORD input, and reversed-output-order
+(passes the symmetric `1/1/1/1` fixture, since forward and reverse order
+are identical there, but fails the asymmetric fixtures) — each isolated
+without disturbing the others; a second valid implementation using
+different temporary registers; nonzero-exit and timeout recovery;
+source-check capitalization/spacing tolerance, a width-mismatch rejection,
+and a comment-only/quoted fake declaration (neither satisfies
+`variables-defined`); direct unit tests of `checkSumAndReverse` covering
+missing/duplicated/extra results, a missing heading, a spliced debug line,
+whitespace/CRLF tolerance, and unconstrained prompt wording; save/reset/
+download/share isolation alongside the calculator assignment; and
+keyboard/theme coverage of the instructions dialog (code examples, help
+links, no video/transcript language) and the practice readout, including
+the shared `"source-text"` submission copy, at desktop and narrow widths.
+`webapp/tests/unit01.spec.js`'s assignment-dropdown option list was updated
+again to include this assignment's title.
+
+Run from `webapp` (PowerShell):
+
+```powershell
+npm run build
+npm test -- --project=app unit04b.spec.js
 npm test
 npx -p typescript tsc -p tsconfig.typecheck.json
 ```

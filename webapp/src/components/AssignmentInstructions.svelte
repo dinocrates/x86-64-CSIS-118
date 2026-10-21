@@ -45,7 +45,9 @@
           </ol>
           <h3>{assignment.submissionMode === 'file-upload' ? 'Submission in Canvas File Upload' : 'Submission in Canvas Text Entry'}</h3>
           <ul>{#each instructions.submission as item}<li>{@html renderInline(item)}</li>{/each}</ul>
-          {#if assignment.submissionMode !== 'file-upload'}
+          {#if assignment.submissionMode === 'source-text'}
+            <p>Paste your complete, commented NASM source as formatted code directly into the Canvas text entry box. A Share link is optional for this assignment and does not replace the required source.</p>
+          {:else if assignment.submissionMode !== 'file-upload'}
             <p>The last three items are written responses in Canvas. Your downloaded .asm file is your saved copy. Screenshots are not required.</p>
           {/if}
           <h3>Grading criteria · {instructions.points} points</h3>
